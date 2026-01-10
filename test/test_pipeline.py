@@ -1,109 +1,140 @@
-#!/usr/bin/env python3
 """Test PyTorch to MLIR compilation pipeline"""
 
 import torch
-import sys
-import os
+import pytest
 
-# Set PYTHONPATH to the build directory
-build_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'build')
-python_packages = os.path.join(build_dir, 'tools', 'spardial', 'python_packages', 'spardial')
-if os.path.exists(python_packages):
-    sys.path.insert(0, python_packages)
-
-from spardial.importer import import_pytorch_model, lower_to_linalg, print_mlir
+from spardial.importer import import_pytorch_model, lower_to_linalg
 from spardial.models import AddNet, MulNet, SimpleLinear
 
 
-def test_torch_import():
-    """Test PyTorch to Torch Dialect import"""
-    print("\n" + "="*80)
-    print("Test 1: PyTorch -> Torch Dialect (AddNet)")
-    print("="*80)
+class TestTorchDialectImport:
+    """Test PyTorch to Torch Dialect IR conversion"""
 
-    model = AddNet()
-    x = torch.randn(2, 3)
-    y = torch.randn(2, 3)
+    def test_addnet_import(self):
+        """Test AddNet model import to Torch Dialect"""
+        model = AddNet()
+        x = torch.randn(2, 3)
+        y = torch.randn(2, 3)
 
-    mlir_module = import_pytorch_model(model, x, y)
-    print_mlir(mlir_module)
+        mlir_module = import_pytorch_model(model, x, y)
 
+        # Verify module is created
+        assert mlir_module is not None
+        module_str = str(mlir_module)
 
-def test_torch_import_mul():
-    """Test PyTorch to Torch Dialect import for MulNet"""
-    print("\n" + "="*80)
-    print("Test 2: PyTorch -> Torch Dialect (MulNet)")
-    print("="*80)
+        # Verify Torch Dialect operations are present
+        assert 'torch.aten.add.Tensor' in module_str
+        assert '!torch.vtensor<[2,3],f32>' in module_str
+        assert 'func.func @main' in module_str
 
-    model = MulNet()
-    x = torch.randn(2, 3)
-    y = torch.randn(2, 3)
+    def test_mulnet_import(self):
+        """Test MulNet model import to Torch Dialect"""
+        model = MulNet()
+        x = torch.randn(2, 3)
+        y = torch.randn(2, 3)
 
-    mlir_module = import_pytorch_model(model, x, y)
-    print_mlir(mlir_module)
+        mlir_module = import_pytorch_model(model, x, y)
 
+        # Verify module is created
+        assert mlir_module is not None
+        module_str = str(mlir_module)
 
-def test_torch_import_linear():
-    """Test PyTorch to Torch Dialect import for SimpleLinear"""
-    print("\n" + "="*80)
-    print("Test 3: PyTorch -> Torch Dialect (SimpleLinear)")
-    print("="*80)
+        # Verify Torch Dialect operations are present
+        assert 'torch.aten.mul.Tensor' in module_str
+        assert '!torch.vtensor<[2,3],f32>' in module_str
 
-    model = SimpleLinear(in_features=4, out_features=2)
-    x = torch.randn(1, 4)
+    def test_linear_import(self):
+        """Test SimpleLinear model import to Torch Dialect"""
+        model = SimpleLinear(in_features=4, out_features=2)
+        x = torch.randn(1, 4)
 
-    mlir_module = import_pytorch_model(model, x)
-    print_mlir(mlir_module)
+        mlir_module = import_pytorch_model(model, x)
 
+        # Verify module is created
+        assert mlir_module is not None
+        module_str = str(mlir_module)
 
-def test_linalg_lowering_add():
-    """Test full pipeline: PyTorch -> Torch Dialect -> Linalg (AddNet)"""
-    print("\n" + "="*80)
-    print("Test 4: Full Pipeline - AddNet -> Linalg")
-    print("="*80)
-
-    model = AddNet()
-    x = torch.randn(2, 3)
-    y = torch.randn(2, 3)
-
-    # Step 1: PyTorch -> Torch Dialect
-    mlir_module = import_pytorch_model(model, x, y)
-    print("\nStep 1: Torch Dialect IR")
-    print_mlir(mlir_module)
-
-    # Step 2: Torch Dialect -> Linalg
-    linalg_module = lower_to_linalg(mlir_module)
-    print("\nStep 2: Linalg-on-Tensors IR")
-    print_mlir(linalg_module)
+        # Verify Torch Dialect operations are present
+        assert 'torch.aten.linear' in module_str
+        assert '!torch.vtensor<[1,4],f32>' in module_str
+        assert '!torch.vtensor<[1,2],f32>' in module_str
 
 
-def test_linalg_lowering_mul():
-    """Test full pipeline: PyTorch -> Torch Dialect -> Linalg (MulNet)"""
-    print("\n" + "="*80)
-    print("Test 5: Full Pipeline - MulNet -> Linalg")
-    print("="*80)
+class TestLinalgLowering:
+    """Test Torch Dialect to Linalg-on-Tensors IR conversion"""
 
-    model = MulNet()
-    x = torch.randn(2, 3)
-    y = torch.randn(2, 3)
+    def test_addnet_lowering(self):
+        """Test AddNet lowering to Linalg IR"""
+        model = AddNet()
+        x = torch.randn(2, 3)
+        y = torch.randn(2, 3)
 
-    mlir_module = import_pytorch_model(model, x, y)
-    linalg_module = lower_to_linalg(mlir_module)
+        # Step 1: PyTorch -> Torch Dialect
+        mlir_module = import_pytorch_model(model, x, y)
+        assert mlir_module is not None
 
-    print("\nLinalg-on-Tensors IR:")
-    print_mlir(linalg_module)
+        # Step 2: Torch Dialect -> Linalg
+        linalg_module = lower_to_linalg(mlir_module)
+        assert linalg_module is not None
+
+        module_str = str(linalg_module)
+
+        # Verify Linalg operations are present
+        assert 'linalg.generic' in module_str
+        assert 'arith.addf' in module_str
+        assert 'tensor<2x3xf32>' in module_str
+        assert 'affine_map' in module_str
+
+        # Verify Torch Dialect is lowered away
+        assert 'torch.aten' not in module_str
+        assert '!torch.vtensor' not in module_str
+
+    def test_mulnet_lowering(self):
+        """Test MulNet lowering to Linalg IR"""
+        model = MulNet()
+        x = torch.randn(2, 3)
+        y = torch.randn(2, 3)
+
+        # Step 1: PyTorch -> Torch Dialect
+        mlir_module = import_pytorch_model(model, x, y)
+        assert mlir_module is not None
+
+        # Step 2: Torch Dialect -> Linalg
+        linalg_module = lower_to_linalg(mlir_module)
+        assert linalg_module is not None
+
+        module_str = str(linalg_module)
+
+        # Verify Linalg operations are present
+        assert 'linalg.generic' in module_str
+        assert 'arith.mulf' in module_str
+        assert 'tensor<2x3xf32>' in module_str
+
+        # Verify Torch Dialect is lowered away
+        assert 'torch.aten' not in module_str
 
 
-if __name__ == "__main__":
-    # Test PyTorch to Torch Dialect import
-    test_torch_import()
-    test_torch_import_mul()
-    test_torch_import_linear()
+class TestEndToEndPipeline:
+    """Test complete PyTorch to Linalg pipeline"""
 
-    # Test full pipeline to Linalg
-    test_linalg_lowering_add()
-    test_linalg_lowering_mul()
+    @pytest.mark.parametrize("model_class,input_shape", [
+        (AddNet, [(2, 3), (2, 3)]),
+        (MulNet, [(2, 3), (2, 3)]),
+    ])
+    def test_full_pipeline(self, model_class, input_shape):
+        """Test full pipeline for various models"""
+        model = model_class()
+        inputs = [torch.randn(*shape) for shape in input_shape]
 
-    print("\n" + "="*80)
-    print("✅ All pipeline tests passed!")
-    print("="*80)
+        # Import to Torch Dialect
+        mlir_module = import_pytorch_model(model, *inputs)
+        assert mlir_module is not None
+        assert 'torch.aten' in str(mlir_module)
+
+        # Lower to Linalg
+        linalg_module = lower_to_linalg(mlir_module)
+        assert linalg_module is not None
+
+        linalg_str = str(linalg_module)
+        assert 'linalg.generic' in linalg_str
+        assert 'torch.aten' not in linalg_str

@@ -51,7 +51,6 @@ def import_pytorch_model(model, *example_args):
 
 
 def print_mlir(module):
-    """MLIR Moduleを表示"""
     print("\n" + "="*80)
     print("MLIR IR:")
     print("="*80)

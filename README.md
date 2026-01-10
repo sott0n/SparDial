@@ -44,14 +44,37 @@ ninja -j 32 SparDialPythonModules
 
 ## How to test
 
-Run the pipeline tests to verify PyTorch to MLIR conversion:
+### Prerequisites
+
+Install pytest if not already installed:
+
+```shell
+pip install pytest
+```
+
+### Running tests
+
+Run the test suite using pytest:
 
 ```shell
 # From the repository root
-PYTHONPATH=build/tools/spardial/python_packages/spardial:$PYTHONPATH python3 test/test_pipeline.py
+pytest test/ -v
 ```
 
-The test script verifies:
-1. PyTorch model export to Torch Dialect IR using FxImporter
-2. Torch Dialect to Linalg-on-Tensors IR lowering
-3. End-to-end pipeline for various models (AddNet, MulNet, SimpleLinear)
+The test suite includes:
+- **TestTorchDialectImport**: PyTorch model export to Torch Dialect IR using FxImporter
+- **TestLinalgLowering**: Torch Dialect to Linalg-on-Tensors IR lowering
+- **TestEndToEndPipeline**: Complete pipeline verification with parametrized tests
+
+### Test options
+
+```shell
+# Run specific test class
+pytest test/test_pipeline.py::TestTorchDialectImport -v
+
+# Run specific test
+pytest test/test_pipeline.py::TestLinalgLowering::test_addnet_lowering -v
+
+# Run with output capture disabled (see print statements)
+pytest test/ -v -s
+```
