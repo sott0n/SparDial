@@ -28,13 +28,30 @@ git submodule udpate --init --recursive --progress
 Building the SparDial in-tree.
 
 ```shell
+mkdir build && cd build
 cmake -GNinja \
       -DCMAKE_BUILD_TYPE=Release \
       -DLLVM_ENABLE_PROJECTS=mlir \
       -DLLVM_EXTERNAL_PROJECTS='torch-mlir;spardial' \
-      -DLLVM_EXTERNAL_TORCH_MLIR_SOURCE_DIR='${PWD}/externals/torch-mlir' \
-      -DLLVM_EXTERNAL_SPARDIAL_SOURCE_DIR='${PWD}' \
+      -DLLVM_EXTERNAL_TORCH_MLIR_SOURCE_DIR="${PWD}/../externals/torch-mlir" \
+      -DLLVM_EXTERNAL_SPARDIAL_SOURCE_DIR="${PWD}/.." \
       -DLLVM_TARGETS_TO_BUILD=host \
       -DMLIR_ENABLE_BINDINGS_PYTHON=ON \
-      externals/torch-mlir/externals/llvm-project/llvm
+      ../externals/torch-mlir/externals/llvm-project/llvm
+
+ninja -j 32 SparDialPythonModules
 ```
+
+## How to test
+
+Run the pipeline tests to verify PyTorch to MLIR conversion:
+
+```shell
+# From the repository root
+PYTHONPATH=build/tools/spardial/python_packages/spardial:$PYTHONPATH python3 test/test_pipeline.py
+```
+
+The test script verifies:
+1. PyTorch model export to Torch Dialect IR using FxImporter
+2. Torch Dialect to Linalg-on-Tensors IR lowering
+3. End-to-end pipeline for various models (AddNet, MulNet, SimpleLinear)
