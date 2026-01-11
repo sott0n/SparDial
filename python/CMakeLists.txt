@@ -18,6 +18,21 @@ declare_mlir_python_sources(SparDialPythonSources.Core
         models.py
 )
 
+# Declare parent for SparDial extensions
+declare_mlir_python_sources(SparDialPythonExtensions)
+
+# SparDial Python extension for passes
+declare_mlir_python_extension(SparDialPythonExtensions.Main
+    MODULE_NAME _spardial
+    ADD_TO_PARENT SparDialPythonExtensions
+    SOURCES
+        SparDialModule.cpp
+    EMBED_CAPI_LINK_LIBS
+        SparDialCAPI
+    PRIVATE_LINK_LIBS
+        LLVMSupport
+)
+
 set(_source_components
     MLIRPythonSources
     MLIRPythonExtension.Core
@@ -27,6 +42,7 @@ set(_source_components
     TorchMLIRPythonExtensions
 
     SparDialPythonSources
+    SparDialPythonExtensions
 )
 
 add_mlir_python_common_capi_library(SparDialAggregateCAPI

@@ -20,6 +20,7 @@ endif()
 include_directories(${LLVM_INCLUDE_DIRS})
 include_directories(${MLIR_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/externals/torch-mlir/include)
 
 list(APPEND CMAKE_MODULE_PATH ${MLIR_MAIN_SRC_DIR}/cmake/modules)
@@ -28,6 +29,9 @@ list(APPEND CMAKE_MODULE_PATH ${LLVM_MAIN_SRC_DIR}/cmake)
 include(TableGen)
 include(AddLLVM)
 include(AddMLIR)
+
+add_subdirectory(include)
+add_subdirectory(lib)
 
 set(SPARDIAL_PYTHON_PACKAGES_DIR "${SPARDIAL_BINARY_DIR}/python_packages")
 add_subdirectory(python)

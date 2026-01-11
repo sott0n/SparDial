@@ -5,6 +5,7 @@ import pytest
 
 from spardial.importer import import_pytorch_model, lower_to_linalg
 from spardial.models import AddNet, MulNet, SimpleLinear
+from spardial.passmanager import PassManager
 
 
 class TestTorchDialectImport:
@@ -138,3 +139,84 @@ class TestEndToEndPipeline:
         linalg_str = str(linalg_module)
         assert 'linalg.generic' in linalg_str
         assert 'torch.aten' not in linalg_str
+
+
+class TestCustomPass:
+    """Test custom SparDial passes"""
+
+    def test_sparse_encoding_propagation_registration(self):
+        """Test that sparse-encoding-propagation pass is registered"""
+        # Import _spardial extension to ensure passes are registered
+        import spardial._mlir_libs._spardial
+
+        # Create a simple module and verify pass can be parsed
+        model = AddNet()
+        x = torch.randn(2, 3)
+        y = torch.randn(2, 3)
+
+        mlir_module = import_pytorch_model(model, x, y)
+        linalg_module = lower_to_linalg(mlir_module)
+
+        # Try to parse the pass - this will fail if not registered
+        with linalg_module.context:
+            pm = PassManager.parse(
+                "builtin.module(func.func(sparse-encoding-propagation))"
+            )
+            assert pm is not None
+
+    def test_sparse_encoding_propagation_execution(self):
+        """Test sparse-encoding-propagation pass execution"""
+        # Import _spardial extension
+        import spardial._mlir_libs._spardial
+
+        model = AddNet()
+        x = torch.randn(2, 3)
+        y = torch.randn(2, 3)
+
+        # Create Linalg IR
+        mlir_module = import_pytorch_model(model, x, y)
+        linalg_module = lower_to_linalg(mlir_module)
+
+        # Get IR before pass
+        ir_before = str(linalg_module)
+        assert 'linalg.generic' in ir_before
+        assert 'tensor<2x3xf32>' in ir_before
+
+        # Apply the pass
+        with linalg_module.context:
+            pm = PassManager.parse(
+                "builtin.module(func.func(sparse-encoding-propagation))"
+            )
+            pm.run(linalg_module.operation)
+
+        # Get IR after pass
+        ir_after = str(linalg_module)
+
+        # Verify IR structure is maintained
+        assert 'linalg.generic' in ir_after
+        assert 'tensor<2x3xf32>' in ir_after
+        assert 'func.func @main' in ir_after
+
+    @pytest.mark.parametrize("model_class", [AddNet, MulNet])
+    def test_sparse_encoding_propagation_various_ops(self, model_class):
+        """Test pass on various operations"""
+        import spardial._mlir_libs._spardial
+
+        model = model_class()
+        x = torch.randn(2, 3)
+        y = torch.randn(2, 3)
+
+        mlir_module = import_pytorch_model(model, x, y)
+        linalg_module = lower_to_linalg(mlir_module)
+
+        # Apply pass without errors
+        with linalg_module.context:
+            pm = PassManager.parse(
+                "builtin.module(func.func(sparse-encoding-propagation))"
+            )
+            pm.run(linalg_module.operation)
+
+        # Verify output is valid MLIR
+        ir_after = str(linalg_module)
+        assert 'func.func @main' in ir_after
+        assert 'linalg.generic' in ir_after
