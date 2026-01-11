@@ -37,10 +37,22 @@ def import_pytorch_model(model, *example_args):
     prog = torch.export.export(model, example_args)
 
     # 5. Apply operator decompositions
+    # Check if any arguments are sparse tensors
+    has_sparse = any(
+        hasattr(arg, 'layout') and arg.layout in [
+            torch.sparse_coo, torch.sparse_csr, torch.sparse_csc,
+            torch.sparse_bsr, torch.sparse_bsc
+        ]
+        for arg in example_args
+    )
+
     decomposition_table = get_decomposition_table()
-    if decomposition_table:
+    if decomposition_table and not has_sparse:
+        # Skip decompositions for sparse tensors to avoid stride() errors
         print("Applying decompositions...")
         prog = prog.run_decompositions(decomposition_table)
+    elif has_sparse:
+        print("Skipping decompositions for sparse tensors...")
 
     # 6. Import to MLIR Torch Dialect
     print("Importing to MLIR Torch Dialect...")
@@ -144,6 +156,7 @@ def sparsify_and_bufferize(linalg_module, sparse_options=""):
     Returns:
         MLIR Module with sparse operations and bufferized memory
     """
+
     print("Applying sparsification and bufferization...")
 
     # Build sparsification options string
