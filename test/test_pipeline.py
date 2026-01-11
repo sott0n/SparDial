@@ -3,7 +3,7 @@
 import torch
 import pytest
 
-from spardial.importer import import_pytorch_model, lower_to_linalg
+from spardial.importer import import_pytorch_model, lower_to_linalg, sparsify_and_bufferize
 from spardial.models import AddNet, MulNet, SimpleLinear
 from spardial.passmanager import PassManager
 
@@ -220,3 +220,80 @@ class TestCustomPass:
         ir_after = str(linalg_module)
         assert 'func.func @main' in ir_after
         assert 'linalg.generic' in ir_after
+
+
+class TestSparsificationBufferization:
+    """Test sparsification and bufferization pipeline"""
+
+    def test_sparsify_basic(self):
+        """Test basic sparsification pipeline on dense tensors"""
+        import spardial._mlir_libs._spardial
+
+        model = AddNet()
+        x = torch.randn(2, 3)
+        y = torch.randn(2, 3)
+
+        # Create Linalg IR
+        mlir_module = import_pytorch_model(model, x, y)
+        linalg_module = lower_to_linalg(mlir_module)
+
+        # Verify input is tensor-based
+        ir_before = str(linalg_module)
+        assert 'tensor<2x3xf32>' in ir_before
+
+        # Apply sparsification and bufferization
+        bufferized_module = sparsify_and_bufferize(linalg_module)
+
+        # Verify output is bufferized (memref-based)
+        ir_after = str(bufferized_module)
+        assert 'memref' in ir_after
+        assert 'func.func @main' in ir_after
+
+    def test_sparsify_with_options(self):
+        """Test sparsification with custom options"""
+        import spardial._mlir_libs._spardial
+
+        model = MulNet()
+        x = torch.randn(3, 3)
+        y = torch.randn(3, 3)
+
+        mlir_module = import_pytorch_model(model, x, y)
+        linalg_module = lower_to_linalg(mlir_module)
+
+        # Apply with parallelization options
+        bufferized_module = sparsify_and_bufferize(
+            linalg_module,
+            sparse_options="parallelization-strategy=none"
+        )
+
+        ir_after = str(bufferized_module)
+        assert 'func.func @main' in ir_after
+        assert 'memref' in ir_after
+
+    @pytest.mark.parametrize("model_class", [AddNet, MulNet])
+    def test_full_pipeline_with_sparsification(self, model_class):
+        """Test complete pipeline: PyTorch -> Torch -> Linalg -> Sparse/Bufferized"""
+        import spardial._mlir_libs._spardial
+
+        model = model_class()
+        x = torch.randn(4, 4)
+        y = torch.randn(4, 4)
+
+        # Step 1: PyTorch -> Torch Dialect
+        mlir_module = import_pytorch_model(model, x, y)
+        assert mlir_module is not None
+        assert 'torch.aten' in str(mlir_module)
+
+        # Step 2: Torch Dialect -> Linalg
+        linalg_module = lower_to_linalg(mlir_module)
+        assert linalg_module is not None
+        assert 'linalg.generic' in str(linalg_module)
+        assert 'tensor' in str(linalg_module)
+
+        # Step 3: Linalg -> Sparse & Bufferized
+        bufferized_module = sparsify_and_bufferize(linalg_module)
+        assert bufferized_module is not None
+
+        ir_final = str(bufferized_module)
+        assert 'func.func @main' in ir_final
+        assert 'memref' in ir_final

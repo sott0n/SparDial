@@ -130,3 +130,67 @@ def lower_to_linalg(torch_module):
 
     print("Lowering successful!")
     return torch_module
+
+
+def sparsify_and_bufferize(linalg_module, sparse_options=""):
+    """
+    Apply sparsification and bufferization passes to Linalg IR
+
+    Args:
+        linalg_module: MLIR Module with Linalg-on-Tensors IR
+        sparse_options: Options for sparsification pass
+                       (e.g., "parallelization-strategy=any-storage-any-loop")
+
+    Returns:
+        MLIR Module with sparse operations and bufferized memory
+    """
+    print("Applying sparsification and bufferization...")
+
+    # Build sparsification options string
+    sp_opts = sparse_options if sparse_options else ""
+
+    passes = [
+        # Generalize named Linalg ops to generic form for sparsification
+        "func.func(linalg-generalize-named-ops)",
+
+        # Fuse elementwise operations for better performance
+        "func.func(linalg-fuse-elementwise-ops)",
+
+        # Propagate sparse encodings through operations (our custom pass)
+        "func.func(sparse-encoding-propagation)",
+
+        # Configure sparse assembler for direct output
+        "sparse-assembler{direct-out}",
+
+        # Main sparsification and bufferization pass
+        f"sparsification-and-bufferization{{{sp_opts}}}" if sp_opts
+        else "sparsification-and-bufferization",
+
+        # Convert sparse storage specifiers to LLVM
+        "sparse-storage-specifier-to-llvm",
+
+        # Expand realloc operations before bufferization
+        "func.func(expand-realloc)",
+
+        # One-shot bufferization: convert tensors to buffers
+        "one-shot-bufferize{"
+        "copy-before-write "
+        "bufferize-function-boundaries "
+        "function-boundary-type-conversion=identity-layout-map"
+        "}",
+
+        # Convert remaining tensor operations to buffers
+        "func.func(buffer-deallocation-simplification)",
+        "func.func(convert-linalg-to-affine-loops)",
+    ]
+
+    pipeline = "builtin.module(" + ",".join(passes) + ")"
+
+    run_pipeline_with_repro_report(
+        linalg_module,
+        pipeline,
+        "Sparsification and bufferization"
+    )
+
+    print("Sparsification and bufferization successful!")
+    return linalg_module
