@@ -166,8 +166,13 @@ def sparsify_and_bufferize(linalg_module, sparse_options=""):
         # Generalize named Linalg ops to generic form for sparsification
         "func.func(linalg-generalize-named-ops)",
 
+        # Run pre-sparsification pass to fuse convert/cast op into
+        # producer as they might hinder kernel fusions.
+        "pre-sparsification-rewrite",
+
         # Fuse elementwise operations for better performance
         "func.func(linalg-fuse-elementwise-ops)",
+        "convert-shape-to-std",
 
         # Propagate sparse encodings through operations (our custom pass)
         "func.func(sparse-encoding-propagation)",
@@ -185,16 +190,44 @@ def sparsify_and_bufferize(linalg_module, sparse_options=""):
         # Expand realloc operations before bufferization
         "func.func(expand-realloc)",
 
-        # One-shot bufferization: convert tensors to buffers
-        "one-shot-bufferize{"
-        "copy-before-write "
-        "bufferize-function-boundaries "
-        "function-boundary-type-conversion=identity-layout-map"
-        "}",
+        # Generalize pad and concat after sparse compiler, as they are handled
+        # differently when the operations involve sparse operands.
+        "func.func(refback-generalize-tensor-pad)",
+        "func.func(refback-generalize-tensor-concat)",
 
-        # Convert remaining tensor operations to buffers
-        "func.func(buffer-deallocation-simplification)",
-        "func.func(convert-linalg-to-affine-loops)",
+        # Bufferize.
+        "func.func(tm-tensor-bufferize)",
+        "one-shot-bufferize{copy-before-write bufferize-function-boundaries function-boundary-type-conversion=identity-layout-map}",
+        "refback-mlprogram-bufferize",
+
+        # Inline sparse helper methods where useful (but after dealloc).
+        "inline",
+        "refback-munge-calling-conventions",
+        "func.func(tm-tensor-to-loops)",
+        "func.func(refback-munge-memref-copy)",
+        "func.func(convert-linalg-to-loops)",
+        "func.func(lower-affine)",
+        "convert-scf-to-cf",
+        "func.func(refback-expand-ops-for-llvm)",
+        "func.func(arith-expand)",
+        "func.func(convert-math-to-llvm)",
+        "convert-math-to-libm",
+        "expand-strided-metadata",
+        "finalize-memref-to-llvm",
+        "lower-affine",
+        "convert-bufferization-to-memref",
+        "finalize-memref-to-llvm",
+        "func.func(convert-arith-to-llvm)",
+
+        # Vector code (SIMD):
+        #   allow fp reductions to reassociate
+        #   allow 32-bit index optimizations (unsafe for very large dimensions)
+        #   assume we are running on a good ol' Intel X86 (disable for ARM/other)
+        "convert-vector-to-llvm{reassociate-fp-reductions force-32bit-vector-indices enable-x86vector}",
+        "convert-func-to-llvm",
+        "convert-cf-to-llvm",
+        "convert-complex-to-llvm",
+        "reconcile-unrealized-casts",
     ]
 
     pipeline = "builtin.module(" + ",".join(passes) + ")"
@@ -205,5 +238,4 @@ def sparsify_and_bufferize(linalg_module, sparse_options=""):
         "Sparsification and bufferization"
     )
 
-    print("Sparsification and bufferization successful!")
     return linalg_module

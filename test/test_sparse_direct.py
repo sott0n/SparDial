@@ -41,7 +41,6 @@ def test_sparse_csr_direct_import():
     assert linalg_module is not None
 
     linalg_ir = str(linalg_module)
-
     assert 'sparse_tensor.encoding' in linalg_ir, \
         "Sparse encoding should be preserved after lowering to Linalg"
 
@@ -49,17 +48,5 @@ def test_sparse_csr_direct_import():
     assert bufferized_module is not None
 
     result_ir = str(bufferized_module)
-    checks = {
-        'memref': 'Bufferization to memref',
-        'scf.while': 'Sparse iteration loops',
-        'sparse_tensor': 'Sparse tensor operations',
-    }
-
-    for pattern, description in checks.items():
-        if pattern in result_ir:
-            print(f"✓ {description}: Found '{pattern}'")
-        else:
-            print(f"✗ {description}: Missing '{pattern}'")
-
     assert 'memref' in result_ir, "Bufferization should have occurred"
     assert 'func.func @main' in result_ir
