@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-from spardial.importer import import_pytorch_model, lower_to_linalg, sparsify_and_bufferize
+from spardial.pipeline import import_pytorch_model, lower_to_linalg, sparsify_and_bufferize
 from spardial.models import AddNet
 
 
@@ -44,9 +44,8 @@ def test_sparse_csr_direct_import():
     assert 'sparse_tensor.encoding' in linalg_ir, \
         "Sparse encoding should be preserved after lowering to Linalg"
 
-    bufferized_module = sparsify_and_bufferize(linalg_module)
-    assert bufferized_module is not None
+    compiled_module = sparsify_and_bufferize(linalg_module)
+    assert compiled_module is not None
 
-    result_ir = str(bufferized_module)
-    assert 'memref' in result_ir, "Bufferization should have occurred"
-    assert 'func.func @main' in result_ir
+    result_ir = str(compiled_module)
+    assert 'llvm.func @main' in result_ir

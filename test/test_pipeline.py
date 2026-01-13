@@ -3,7 +3,7 @@
 import torch
 import pytest
 
-from spardial.importer import import_pytorch_model, lower_to_linalg, sparsify_and_bufferize
+from spardial.pipeline import import_pytorch_model, lower_to_linalg, sparsify_and_bufferize
 from spardial.models import AddNet, MulNet, SimpleLinear
 from spardial.passmanager import PassManager
 
@@ -242,12 +242,10 @@ class TestSparsificationBufferization:
         assert 'tensor<2x3xf32>' in ir_before
 
         # Apply sparsification and bufferization
-        bufferized_module = sparsify_and_bufferize(linalg_module)
+        compiled_module = sparsify_and_bufferize(linalg_module)
 
-        # Verify output is bufferized (memref-based)
-        ir_after = str(bufferized_module)
-        assert 'memref' in ir_after
-        assert 'func.func @main' in ir_after
+        ir_after = str(compiled_module)
+        assert 'llvm.func @main' in ir_after
 
     def test_sparsify_with_options(self):
         """Test sparsification with custom options"""
@@ -261,14 +259,13 @@ class TestSparsificationBufferization:
         linalg_module = lower_to_linalg(mlir_module)
 
         # Apply with parallelization options
-        bufferized_module = sparsify_and_bufferize(
+        compiled_module = sparsify_and_bufferize(
             linalg_module,
             sparse_options="parallelization-strategy=none"
         )
 
-        ir_after = str(bufferized_module)
-        assert 'func.func @main' in ir_after
-        assert 'memref' in ir_after
+        ir_after = str(compiled_module)
+        assert 'llvm.func @main' in ir_after
 
     @pytest.mark.parametrize("model_class", [AddNet, MulNet])
     def test_full_pipeline_with_sparsification(self, model_class):
@@ -291,9 +288,8 @@ class TestSparsificationBufferization:
         assert 'tensor' in str(linalg_module)
 
         # Step 3: Linalg -> Sparse & Bufferized
-        bufferized_module = sparsify_and_bufferize(linalg_module)
-        assert bufferized_module is not None
+        compiled_module = sparsify_and_bufferize(linalg_module)
+        assert compiled_module is not None
 
-        ir_final = str(bufferized_module)
-        assert 'func.func @main' in ir_final
-        assert 'memref' in ir_final
+        ir_final = str(compiled_module)
+        assert 'llvm.func @main' in ir_final

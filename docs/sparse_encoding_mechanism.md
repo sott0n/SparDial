@@ -128,7 +128,7 @@ mlir_module = import_pytorch_model(model, S_dense, Y)  # Will be treated as dens
 PyTorch's decomposition passes don't handle sparse tensors well (stride() errors). SparDial automatically skips decompositions when sparse tensors are detected:
 
 ```python
-# In spardial/importer.py
+# In spardial/pipeline.py
 has_sparse = any(
     hasattr(arg, 'layout') and arg.layout in [
         torch.sparse_coo, torch.sparse_csr, ...

@@ -14,7 +14,7 @@ declare_mlir_python_sources(SparDialPythonSources.Core
     ADD_TO_PARENT SparDialPythonSources
     SOURCES
         __init__.py
-        importer.py
+        pipeline.py
         models.py
 )
 
