@@ -58,7 +58,7 @@ Run the test suite using pytest:
 
 ```shell
 # From the repository root
-pytest test/ -v
+pytest tests/ -v
 ```
 
 The test suite includes:
@@ -70,11 +70,11 @@ The test suite includes:
 
 ```shell
 # Run specific test class
-pytest test/test_pipeline.py::TestTorchDialectImport -v
+pytest tests/test_pipeline.py::TestTorchDialectImport -v
 
 # Run specific test
-pytest test/test_pipeline.py::TestLinalgLowering::test_addnet_lowering -v
+pytest tests/test_pipeline.py::TestLinalgLowering::test_addnet_lowering -v
 
 # Run with output capture disabled (see print statements)
-pytest test/ -v -s
+pytest tests/ -v -s
 ```
