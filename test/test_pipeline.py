@@ -115,90 +115,11 @@ class TestLinalgLowering:
         assert 'torch.aten' not in module_str
 
 
-class TestEndToEndPipeline:
-    """Test complete PyTorch to Linalg pipeline"""
-
-    @pytest.mark.parametrize("model_class,input_shape", [
-        (AddNet, [(2, 3), (2, 3)]),
-        (MulNet, [(2, 3), (2, 3)]),
-    ])
-    def test_full_pipeline(self, model_class, input_shape):
-        """Test full pipeline for various models"""
-        model = model_class()
-        inputs = [torch.randn(*shape) for shape in input_shape]
-
-        # Import to Torch Dialect
-        mlir_module = import_pytorch_model(model, *inputs)
-        assert mlir_module is not None
-        assert 'torch.aten' in str(mlir_module)
-
-        # Lower to Linalg
-        linalg_module = lower_to_linalg(mlir_module)
-        assert linalg_module is not None
-
-        linalg_str = str(linalg_module)
-        assert 'linalg.generic' in linalg_str
-        assert 'torch.aten' not in linalg_str
-
-
-class TestCustomPass:
+class TestCustomSparseEncodingPropagationPass:
     """Test custom SparDial passes"""
 
-    def test_sparse_encoding_propagation_registration(self):
-        """Test that sparse-encoding-propagation pass is registered"""
-        # Import _spardial extension to ensure passes are registered
-        import spardial._mlir_libs._spardial
-
-        # Create a simple module and verify pass can be parsed
-        model = AddNet()
-        x = torch.randn(2, 3)
-        y = torch.randn(2, 3)
-
-        mlir_module = import_pytorch_model(model, x, y)
-        linalg_module = lower_to_linalg(mlir_module)
-
-        # Try to parse the pass - this will fail if not registered
-        with linalg_module.context:
-            pm = PassManager.parse(
-                "builtin.module(func.func(sparse-encoding-propagation))"
-            )
-            assert pm is not None
-
-    def test_sparse_encoding_propagation_execution(self):
-        """Test sparse-encoding-propagation pass execution"""
-        # Import _spardial extension
-        import spardial._mlir_libs._spardial
-
-        model = AddNet()
-        x = torch.randn(2, 3)
-        y = torch.randn(2, 3)
-
-        # Create Linalg IR
-        mlir_module = import_pytorch_model(model, x, y)
-        linalg_module = lower_to_linalg(mlir_module)
-
-        # Get IR before pass
-        ir_before = str(linalg_module)
-        assert 'linalg.generic' in ir_before
-        assert 'tensor<2x3xf32>' in ir_before
-
-        # Apply the pass
-        with linalg_module.context:
-            pm = PassManager.parse(
-                "builtin.module(func.func(sparse-encoding-propagation))"
-            )
-            pm.run(linalg_module.operation)
-
-        # Get IR after pass
-        ir_after = str(linalg_module)
-
-        # Verify IR structure is maintained
-        assert 'linalg.generic' in ir_after
-        assert 'tensor<2x3xf32>' in ir_after
-        assert 'func.func @main' in ir_after
-
     @pytest.mark.parametrize("model_class", [AddNet, MulNet])
-    def test_sparse_encoding_propagation_various_ops(self, model_class):
+    def test_sparse_encoding_propagation(self, model_class):
         """Test pass on various operations"""
         import spardial._mlir_libs._spardial
 
@@ -266,30 +187,3 @@ class TestSparsificationBufferization:
 
         ir_after = str(compiled_module)
         assert 'llvm.func @main' in ir_after
-
-    @pytest.mark.parametrize("model_class", [AddNet, MulNet])
-    def test_full_pipeline_with_sparsification(self, model_class):
-        """Test complete pipeline: PyTorch -> Torch -> Linalg -> Sparse/Bufferized"""
-        import spardial._mlir_libs._spardial
-
-        model = model_class()
-        x = torch.randn(4, 4)
-        y = torch.randn(4, 4)
-
-        # Step 1: PyTorch -> Torch Dialect
-        mlir_module = import_pytorch_model(model, x, y)
-        assert mlir_module is not None
-        assert 'torch.aten' in str(mlir_module)
-
-        # Step 2: Torch Dialect -> Linalg
-        linalg_module = lower_to_linalg(mlir_module)
-        assert linalg_module is not None
-        assert 'linalg.generic' in str(linalg_module)
-        assert 'tensor' in str(linalg_module)
-
-        # Step 3: Linalg -> Sparse & Bufferized
-        compiled_module = sparsify_and_bufferize(linalg_module)
-        assert compiled_module is not None
-
-        ir_final = str(compiled_module)
-        assert 'llvm.func @main' in ir_final
