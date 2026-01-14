@@ -16,6 +16,9 @@ declare_mlir_python_sources(SparDialPythonSources.Core
         __init__.py
         pipeline.py
         models.py
+        backend.py
+        models/__init__.py
+        models/kernels.py
 )
 
 # Declare parent for SparDial extensions

@@ -43,3 +43,8 @@
 build/
 __pycache__/
 .cache/
+
+# LIT test generated files
+.lit_test_times.txt
+tests/Output/
+tests/**/Output/

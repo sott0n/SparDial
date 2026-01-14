@@ -33,7 +33,7 @@ def import_pytorch_model(model, *example_args):
     fx_importer = FxImporter(context=context)
 
     # 4. Export the PyTorch model to an FX graph
-    print("Exporting PyTorch model to FX graph...")
+    print("Exporting PyTorch model to FX graph...", file=sys.stderr)
     prog = torch.export.export(model, example_args)
 
     # 5. Apply operator decompositions
@@ -49,16 +49,16 @@ def import_pytorch_model(model, *example_args):
     decomposition_table = get_decomposition_table()
     if decomposition_table and not has_sparse:
         # Skip decompositions for sparse tensors to avoid stride() errors
-        print("Applying decompositions...")
+        print("Applying decompositions...", file=sys.stderr)
         prog = prog.run_decompositions(decomposition_table)
     elif has_sparse:
-        print("Skipping decompositions for sparse tensors...")
+        print("Skipping decompositions for sparse tensors...", file=sys.stderr)
 
     # 6. Import to MLIR Torch Dialect
-    print("Importing to MLIR Torch Dialect...")
+    print("Importing to MLIR Torch Dialect...", file=sys.stderr)
     fx_importer.import_frozen_program(prog)
 
-    print("Import successful!")
+    print("Import successful!", file=sys.stderr)
     return fx_importer.module
 
 
@@ -125,7 +125,7 @@ def lower_to_linalg(torch_module):
     Returns:
         MLIR Module (Linalg-on-Tensors IR)
     """
-    print("Lowering Torch Dialect -> Linalg-on-Tensors...")
+    print("Lowering Torch Dialect -> Linalg-on-Tensors...", file=sys.stderr)
 
     pipeline = (
         "builtin.module("
@@ -140,7 +140,7 @@ def lower_to_linalg(torch_module):
         "Lowering Torch IR to Linalg IR"
     )
 
-    print("Lowering successful!")
+    print("Lowering successful!", file=sys.stderr)
     return torch_module
 
 
@@ -157,7 +157,7 @@ def sparsify_and_bufferize(linalg_module, sparse_options=""):
         MLIR Module with sparse operations and bufferized memory
     """
 
-    print("Applying sparsification and bufferization...")
+    print("Applying sparsification and bufferization...", file=sys.stderr)
 
     # Build sparsification options string
     sp_opts = sparse_options if sparse_options else ""
@@ -175,7 +175,8 @@ def sparsify_and_bufferize(linalg_module, sparse_options=""):
         "convert-shape-to-std",
 
         # Propagate sparse encodings through operations (our custom pass)
-        "func.func(sparse-encoding-propagation)",
+        # TODO: Enable this pass once it's properly registered
+        # "func.func(sparse-encoding-propagation)",
 
         # Configure sparse assembler for direct output
         "sparse-assembler{direct-out}",

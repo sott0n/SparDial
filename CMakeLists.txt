@@ -36,4 +36,7 @@ add_subdirectory(lib)
 set(SPARDIAL_PYTHON_PACKAGES_DIR "${SPARDIAL_BINARY_DIR}/python_packages")
 add_subdirectory(python)
 
+# Add tests
+add_subdirectory(tests)
+
 message(STATUS "SparDial configuration complete")

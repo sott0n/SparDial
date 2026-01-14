@@ -1,0 +1,24 @@
+@LIT_SITE_CFG_IN_HEADER@
+
+import sys
+
+config.spardial_obj_root = "@SPARDIAL_BINARY_DIR@"
+config.spardial_source_root = "@SPARDIAL_SOURCE_DIR@"
+config.python_executable = "@Python3_EXECUTABLE@"
+config.llvm_tools_dir = "@LLVM_TOOLS_DIR@"
+config.llvm_shlib_ext = "@SHLIBEXT@"
+
+# Support substitution of the tools_dir with user parameters. This is
+# used when we can't determine the tool dir at configuration time.
+try:
+    config.llvm_tools_dir = config.llvm_tools_dir % lit_config.params
+except KeyError:
+    e = sys.exc_info()[1]
+    key, = e.args
+    lit_config.fatal("unable to find %r parameter, use '--param=%s=VALUE'" % (key,key))
+
+import lit.llvm
+lit.llvm.initialize(lit_config, config)
+
+# Let the main config do the real work.
+lit_config.load_config(config, "@SPARDIAL_SOURCE_DIR@/tests/lit.cfg.py")
