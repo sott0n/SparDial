@@ -28,15 +28,20 @@ Linalg-on-Tensors IR
 Sparse Linalg IR (with bufferization)
     ↓ 4: convert-linalg-to-loops + lower to LLVM
 LLVM Dialect IR
-    ↓ 5: JIT Execution (future: ExecutionEngine)
+    ↓ 5: refback-munge-calling-conventions
+Execution-ready IR
+    ↓ 6: MLIR ExecutionEngine (JIT)
 Executable Code
 ```
 
 Key features:
-- Automatic sparse tensor detection and handling
-- Sparsification pass for efficient sparse operations
-- Support for CSR (Compressed Sparse Row) format
-- End-to-end JIT compilation
+- **Sparse tensor optimization at IR level**: Uses MLIR Sparse Tensor Dialect for compile-time optimization
+- **Automatic sparsification**: Detects sparse patterns and applies optimizations during compilation
+- **ExecutionEngine-based JIT**: Compiles and executes MLIR IR directly
+- **CSR format support**: Handles Compressed Sparse Row tensors from PyTorch
+- **End-to-end compilation**: PyTorch → MLIR → Optimized machine code
+
+Note: The pipeline performs sparse optimizations at the IR level using Sparse Tensor Dialect. Currently, the execution interface uses dense array representation for input/output, while the internal computation benefits from sparse optimizations.
 
 ## How to build
 

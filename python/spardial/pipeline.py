@@ -240,3 +240,37 @@ def sparsify_and_bufferize(linalg_module, sparse_options=""):
     )
 
     return linalg_module
+
+
+def prepare_for_execution(llvm_module):
+    """
+    Prepare LLVM module for execution by munging calling conventions.
+
+    This makes the module compatible with ExecutionEngine by converting
+    function signatures to use unranked memrefs and callback-based returns.
+
+    Args:
+        llvm_module: MLIR Module (LLVM Dialect)
+
+    Returns:
+        MLIR Module ready for ExecutionEngine
+    """
+    print("Preparing module for execution...", file=sys.stderr)
+
+    passes = [
+        # Munge calling conventions to make ExecutionEngine compatible
+        # This converts function signatures to use unranked memrefs
+        # and returns via callbacks
+        "refback-munge-calling-conventions",
+    ]
+
+    pipeline = "builtin.module(" + ",".join(passes) + ")"
+
+    run_pipeline_with_repro_report(
+        llvm_module,
+        pipeline,
+        "Preparing for execution"
+    )
+
+    print("Module ready for execution!", file=sys.stderr)
+    return llvm_module
