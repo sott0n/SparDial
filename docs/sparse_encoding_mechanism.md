@@ -1,4 +1,4 @@
-# How Sparse Encoding Works in SparDial and SpComp
+# How Sparse Encoding Works in SparDial
 
 ## Answer to "Where does sparse encoding happen?"
 
@@ -141,14 +141,6 @@ if decomposition_table and not has_sparse:
 elif has_sparse:
     print("Skipping decompositions for sparse tensors...")
 ```
-
-## SpComp's Approach
-
-SpComp uses the exact same mechanism:
-1. Passes sparse tensors to `torch.export.export()`
-2. FxImporter detects sparse layout and adds encoding
-3. Sparse encoding propagates through the pipeline
-4. At runtime, sparse tensors are split into components (crow_indices, col_indices, values)
 
 ## Summary
 
