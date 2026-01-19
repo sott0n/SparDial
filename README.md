@@ -11,8 +11,6 @@ Sparse Dialect Compiler based on MLIR
   - [Sparse Tensor Support](#sparse-tensor-support)
   - [Available Models](#available-models)
 - [How to test](#how-to-test)
-  - [LIT Tests (Integration Tests)](#lit-tests-integration-tests)
-  - [Pytest Tests (Unit Tests)](#pytest-tests-unit-tests)
 
 ## Pipeline
 
@@ -131,13 +129,9 @@ crow_indices, col_indices, values = spardial_jit(net, sparse_csr, sparse_csr)
 
 ## How to test
 
-SparDial has two types of tests: LIT integration tests and pytest unit tests.
+SparDial uses LLVM's [LIT](https://llvm.org/docs/CommandGuide/lit.html) (LLVM Integrated Tester) framework for all tests.
 
-### LIT Tests (Integration Tests)
-
-Integration tests use LLVM's [LIT](https://llvm.org/docs/CommandGuide/lit.html) (LLVM Integrated Tester) framework to test the complete compilation pipeline with FileCheck assertions.
-
-#### Running LIT tests
+### Running tests
 
 Using CMake:
 
@@ -154,50 +148,21 @@ cd build
 python bin/llvm-lit -sv tools/spardial/tests
 ```
 
-#### Test structure
+### Test structure
 
-LIT tests are located in `tests/models/` and test end-to-end compilation:
-- **add.py**: Tests AddNet with dense and sparse tensors
-  - Dense + Dense addition
-  - Sparse (CSR) + Dense addition
-  - Dense + Sparse (CSR) addition
-  - Sparse + Sparse addition
+Tests are located in `tests/` directory:
 
-Each test verifies output using FileCheck directives (`# CHECK:`) to ensure both PyTorch execution and SparDial JIT compilation produce expected results.
+- **tests/models/**: End-to-end model tests comparing PyTorch and SparDial JIT execution
+  - `add.py`, `mul.py`, `mm.py`: Basic operations
+  - `spmv.py`, `sddmm.py`: Sparse matrix operations
+  - `gcn.py`, `gat.py`: Graph neural network layers
+  - `sparse_formats.py`: Various sparse tensor formats (COO, CSR, CSC, BSR, BSC)
 
-### Pytest Tests (Unit Tests)
+- **tests/pipeline/**: Pipeline stage tests
+  - `torch_import.py`: PyTorch to Torch Dialect conversion
+  - `linalg_lowering.py`: Torch Dialect to Linalg lowering
+  - `sparse_encoding_pass.py`: Sparse encoding propagation pass
+  - `sparsification.py`: Sparsification and bufferization
+  - `sparse_csr_import.py`: CSR tensor automatic encoding
 
-Unit tests use pytest to test individual pipeline components.
-
-#### Prerequisites
-
-Install pytest if not already installed:
-
-```shell
-pip install pytest
-```
-
-#### Running pytest tests
-
-```shell
-# From the repository root
-pytest tests/ -v
-```
-
-The test suite includes:
-- **TestTorchDialectImport**: PyTorch model export to Torch Dialect IR using FxImporter
-- **TestLinalgLowering**: Torch Dialect to Linalg-on-Tensors IR lowering
-- **TestEndToEndPipeline**: Complete pipeline verification with parametrized tests
-
-#### Pytest options
-
-```shell
-# Run specific test class
-pytest tests/test_pipeline.py::TestTorchDialectImport -v
-
-# Run specific test
-pytest tests/test_pipeline.py::TestLinalgLowering::test_addnet_lowering -v
-
-# Run with output capture disabled (see print statements)
-pytest tests/ -v -s
-```
+Each test uses FileCheck directives (`# CHECK:`) to verify expected output patterns.

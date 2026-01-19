@@ -4,26 +4,60 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SparDial is a Sparse Dialect Compiler based on MLIR (Multi-Level Intermediate Representation).
+SparDial is a Sparse Dialect Compiler based on MLIR (Multi-Level Intermediate Representation). It compiles PyTorch models with sparse tensor support to optimized LLVM code.
 
-## Development Status
+## Build Commands
 
-This repository is in its initial setup phase. As the codebase develops, this file should be updated with:
+```shell
+# Build the project
+cd build && ninja
 
-- Build system commands (CMake, Make, etc.)
-- Test execution commands
-- Code architecture and dialect structure
-- MLIR dialect registration and operation definitions
-- Sparse tensor representation patterns
-- Integration points with LLVM/MLIR infrastructure
+# Build Python modules only
+ninja SparDialPythonModules
+```
 
-## Expected Architecture
+## Test Commands
 
-As an MLIR-based compiler project, the codebase will likely include:
+```shell
+# Run all tests (LIT-based)
+ninja check-spardial
 
-- **Dialect definitions**: Custom MLIR operations for sparse computations
-- **Transformations**: Passes for optimizing sparse operations
-- **Lowering paths**: Converting high-level sparse operations to lower-level representations
-- **Runtime support**: Libraries for executing sparse operations
+# Run LIT directly
+python bin/llvm-lit -sv tools/spardial/tests
+```
 
-Update this document as the project structure materializes.
+## Project Structure
+
+- **python/spardial/**: Python package for PyTorch-to-MLIR pipeline
+  - `pipeline.py`: Import and lowering functions
+  - `backend.py`: JIT compilation backend (`spardial_jit`)
+  - `models/`: Test model definitions (AddNet, MulNet, etc.)
+
+- **lib/**: C++ MLIR dialect and passes
+  - `Dialect/`: SparDial dialect definitions
+  - `Transforms/`: Custom passes (e.g., sparse-encoding-propagation)
+
+- **tests/**: LIT tests
+  - `models/`: End-to-end model tests (PyTorch vs SparDial JIT)
+  - `pipeline/`: Pipeline stage tests (import, lowering, sparsification)
+
+## Compilation Pipeline
+
+```
+PyTorch Model
+    ↓ torch.export.export() + FxImporter
+Torch Dialect IR
+    ↓ torch-backend-to-linalg-on-tensors-backend-pipeline
+Linalg-on-Tensors IR
+    ↓ sparsification-and-bufferization
+LLVM Dialect IR
+    ↓ ExecutionEngine JIT
+Native Execution
+```
+
+## Key APIs
+
+```python
+from spardial.backend import spardial_jit
+from spardial.pipeline import import_pytorch_model, lower_to_linalg, sparsify_and_bufferize
+```

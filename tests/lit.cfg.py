@@ -32,9 +32,6 @@ config.excludes = [
     "lit.cfg.py",
     "lit.site.cfg.py",
     "lit.site.cfg.py.in",
-    "conftest.py",
-    "test_pipeline.py",
-    "test_sparse_direct.py",
     "__pycache__",
 ]
 
