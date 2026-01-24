@@ -37,30 +37,56 @@ def format_human_readable(results: List[BenchmarkResult]) -> str:
     lines.append("=" * 80)
     lines.append("")
 
-    for result in results:
-        lines.append(f"Benchmark: {result.name}")
-        lines.append(f"  Size: {result.size}")
-        lines.append(f"  Sparsity: {result.sparsity:.1%}")
-        lines.append(f"  Format: {result.format}")
-        lines.append("")
+    if not results:
+        lines.append("(no results)")
+        return "\n".join(lines)
 
-        lines.append("  PyTorch CPU:")
-        lines.append(f"    Mean: {result.pytorch_mean:.3f} ms")
-        lines.append(f"    Std:  {result.pytorch_std:.3f} ms")
-        lines.append("")
+    headers = [
+        "benchmark",
+        "size",
+        "sparsity",
+        "format",
+        "pytorch_mean_ms",
+        "pytorch_std_ms",
+        "spardial_compile_ms",
+        "spardial_mean_ms",
+        "spardial_std_ms",
+        "speedup",
+        "correct",
+        "max_error",
+    ]
 
-        lines.append("  SparDial JIT:")
-        lines.append(f"    Compile: {result.spardial_compile_time:.3f} ms")
-        lines.append(f"    Mean:    {result.spardial_mean:.3f} ms")
-        lines.append(f"    Std:     {result.spardial_std:.3f} ms")
-        lines.append("")
+    rows = []
+    for r in results:
+        rows.append([
+            r.name,
+            "x".join(map(str, r.size)),
+            f"{r.sparsity:.1%}",
+            r.format,
+            f"{r.pytorch_mean:.3f}",
+            f"{r.pytorch_std:.3f}",
+            f"{r.spardial_compile_time:.3f}",
+            f"{r.spardial_mean:.3f}",
+            f"{r.spardial_std:.3f}",
+            f"{r.speedup:.2f}x",
+            "yes" if r.correctness_passed else "no",
+            f"{r.max_error:.2e}",
+        ])
 
-        lines.append(f"  Speedup: {result.speedup:.2f}x")
+    widths = [
+        max(len(headers[i]), max(len(row[i]) for row in rows))
+        for i in range(len(headers))
+    ]
 
-        status = "PASS" if result.correctness_passed else "FAIL"
-        lines.append(f"  Correctness: {status} (max error: {result.max_error:.2e})")
-        lines.append("-" * 80)
-        lines.append("")
+    def _format_row(values):
+        return " | ".join(
+            value.ljust(widths[i]) for i, value in enumerate(values)
+        )
+
+    lines.append(_format_row(headers))
+    lines.append("-+-".join("-" * w for w in widths))
+    for row in rows:
+        lines.append(_format_row(row))
 
     return "\n".join(lines)
 
