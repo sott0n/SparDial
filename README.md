@@ -11,6 +11,7 @@ Sparse Dialect Compiler based on MLIR
   - [Sparse Tensor Support](#sparse-tensor-support)
   - [Available Models](#available-models)
 - [How to test](#how-to-test)
+- [Benchmarks](#benchmarks)
 
 ## Pipeline
 
@@ -166,3 +167,20 @@ Tests are located in `tests/` directory:
   - `sparse_csr_import.py`: CSR tensor automatic encoding
 
 Each test uses FileCheck directives (`# CHECK:`) to verify expected output patterns.
+
+## Benchmarks
+
+SparDial includes a benchmarking system to compare performance between PyTorch CPU and SparDial JIT execution.
+
+```shell
+# Run quick benchmark
+ninja spardial-benchmark-quick
+
+# Run full benchmark
+ninja spardial-benchmark
+
+# Run with JSON output for CI
+ninja spardial-benchmark-json
+```
+
+For detailed benchmark results and usage instructions, see [benchmarks/README.md](benchmarks/README.md).

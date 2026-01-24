@@ -39,4 +39,7 @@ add_subdirectory(python)
 # Add tests
 add_subdirectory(tests)
 
+# Add benchmarks
+add_subdirectory(benchmarks)
+
 message(STATUS "SparDial configuration complete")
