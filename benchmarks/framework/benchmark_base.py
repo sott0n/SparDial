@@ -404,7 +404,7 @@ class BenchmarkBase(ABC):
         size: Tuple[int, ...],
         sparsity: float,
         format: str,
-        verbose: bool = True,
+        verbose: bool = False,
     ) -> BenchmarkResult:
         """
         Run the complete benchmark.
@@ -413,7 +413,7 @@ class BenchmarkBase(ABC):
             size: Size of tensors
             sparsity: Sparsity level (0.0 to 1.0)
             format: Sparse format (coo, csr, csc, dense)
-            verbose: Print progress messages
+            verbose: Print detailed progress messages
 
         Returns:
             BenchmarkResult with timing and correctness info

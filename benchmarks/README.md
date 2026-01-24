@@ -40,7 +40,7 @@ export PYTHONPATH=/path/to/build/tools/spardial/python_packages/spardial:/path/t
 python -m benchmarks --benchmarks spmv,spmm,add --sizes 1000x1000,2000x2000 --sparsities 0.9,0.99 --formats csr
 
 # Quick mode
-python -m benchmarks --quick --verbose
+python -m benchmarks --quick --progress
 
 # Output formats
 python -m benchmarks --output json > results.json
@@ -59,7 +59,7 @@ python -m benchmarks --output csv > results.csv
 | `--iterations` | Benchmark iterations | 10 |
 | `--output` | Output format (human,json,csv) | human |
 | `--quick` | Quick mode (small sizes, fewer iterations) | false |
-| `--verbose` | Print progress messages | false |
+| `--progress` | Print progress for each benchmark case | false |
 
 ## Benchmark Kernels
 

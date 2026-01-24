@@ -188,9 +188,9 @@ Examples:
         help="Quick mode: smaller sizes, fewer iterations",
     )
     parser.add_argument(
-        "--verbose",
+        "--progress",
         action="store_true",
-        help="Print verbose progress messages",
+        help="Print progress for each benchmark case",
     )
 
     args = parser.parse_args()
@@ -239,6 +239,8 @@ Examples:
 
     # Run benchmarks
     results: List[BenchmarkResult] = []
+    total_cases = len(benchmark_names) * len(sizes) * len(sparsities) * len(formats)
+    case_idx = 0
 
     for name in benchmark_names:
         benchmark_class = BENCHMARKS[name]
@@ -250,21 +252,25 @@ Examples:
         for size in sizes:
             for sparsity in sparsities:
                 for fmt in formats:
+                    case_idx += 1
                     try:
-                        result = benchmark.run(
-                            size=size,
-                            sparsity=sparsity,
-                            format=fmt,
-                            verbose=args.verbose,
-                        )
+                        result = benchmark.run(size=size, sparsity=sparsity, format=fmt)
                         results.append(result)
+                        if args.progress:
+                            status = "" if result.correctness_passed else ", FAIL"
+                            print(
+                                f"[{case_idx}/{total_cases}] {name} "
+                                f"size={size}, sparsity={sparsity:.1%}, format={fmt} "
+                                f"speedup={result.speedup:.2f}x{status}",
+                                file=sys.stderr,
+                            )
                     except Exception as e:
                         print(
                             f"Error running {name} "
                             f"(size={size}, sparsity={sparsity}, format={fmt}): {e}",
                             file=sys.stderr
                         )
-                        if args.verbose:
+                        if args.progress:
                             traceback.print_exc()
 
     # Format and print results
