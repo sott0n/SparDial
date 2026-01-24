@@ -53,6 +53,7 @@ class BenchmarkResult:
     # Correctness check
     correctness_passed: bool = False
     max_error: float = 0.0
+    correctness_reason: str = ""
 
     def compute_statistics(self) -> None:
         """Compute mean, std, and speedup from timing lists."""
@@ -311,7 +312,7 @@ class BenchmarkBase(ABC):
         spardial_output: Union[np.ndarray, Tuple[np.ndarray, ...]],
         rtol: float = 1e-5,
         atol: float = 1e-5,
-    ) -> Tuple[bool, float]:
+    ) -> Tuple[bool, float, str]:
         """
         Check correctness between PyTorch and SparDial outputs.
 
@@ -322,8 +323,11 @@ class BenchmarkBase(ABC):
             atol: Absolute tolerance
 
         Returns:
-            Tuple of (passed, max_error)
+            Tuple of (passed, max_error, reason)
         """
+        def _has_nan_inf(arr: np.ndarray) -> bool:
+            return bool(np.isnan(arr).any() or np.isinf(arr).any())
+
         # Handle sparse outputs (SparDial returns tuple of components)
         if isinstance(spardial_output, tuple):
             # SparDial returned sparse tensor components
@@ -351,7 +355,11 @@ class BenchmarkBase(ABC):
                             rtol=rtol,
                             atol=atol
                         ))
-                        return passed, max_error
+                        if _has_nan_inf(pytorch_values) or _has_nan_inf(spardial_values):
+                            return False, max_error, "NaN/Inf"
+                        if passed:
+                            return True, max_error, ""
+                        return False, max_error, f"max_error {max_error:.1e}"
                 else:
                     # COO format or other - compare values only
                     pytorch_values = pytorch_output._values().detach().cpu().numpy()
@@ -365,18 +373,15 @@ class BenchmarkBase(ABC):
                         rtol=rtol,
                         atol=atol
                     ))
-                    return passed, max_error
+                    if _has_nan_inf(pytorch_values) or _has_nan_inf(spardial_values):
+                        return False, max_error, "NaN/Inf"
+                    if passed:
+                        return True, max_error, ""
+                    return False, max_error, f"max_error {max_error:.1e}"
             else:
                 # PyTorch is dense but SparDial returned sparse
-                pytorch_np = (
-                    pytorch_output.detach().cpu().numpy()
-                    if isinstance(pytorch_output, torch.Tensor)
-                    else np.array(pytorch_output)
-                )
-                spardial_np = spardial_output[-1]
                 max_error = float('inf')
-                passed = False
-                return passed, max_error
+                return False, max_error, "sparse/dense mismatch"
         else:
             # Dense output - convert PyTorch output to numpy
             if isinstance(pytorch_output, torch.Tensor):
@@ -392,12 +397,62 @@ class BenchmarkBase(ABC):
             spardial_np = spardial_output
 
         # Compute max absolute error
+        if pytorch_np.shape != spardial_np.shape:
+            return False, float("inf"), "shape mismatch"
+
         max_error = float(np.max(np.abs(pytorch_np - spardial_np)))
 
         # Check if results are close
         passed = bool(np.allclose(pytorch_np, spardial_np, rtol=rtol, atol=atol))
 
-        return passed, max_error
+        if _has_nan_inf(pytorch_np) or _has_nan_inf(spardial_np):
+            return False, max_error, "NaN/Inf"
+        if passed:
+            return True, max_error, ""
+        return False, max_error, f"max_error {max_error:.1e}"
+
+    def _summarize_output(
+        self,
+        pytorch_output: Union[torch.Tensor, np.ndarray],
+        spardial_output: Union[np.ndarray, Tuple[np.ndarray, ...]],
+    ) -> str:
+        def _np_summary(arr: np.ndarray, label: str) -> str:
+            return (
+                f"{label}_shape={arr.shape}, {label}_dtype={arr.dtype}, "
+                f"{label}_nan={np.isnan(arr).any()}, {label}_inf={np.isinf(arr).any()}, "
+                f"{label}_abs_max={float(np.max(np.abs(arr))):.3e}"
+            )
+
+        parts: List[str] = []
+
+        if isinstance(pytorch_output, torch.Tensor):
+            if pytorch_output.layout != torch.strided:
+                values = pytorch_output._values().detach().cpu().numpy()
+                parts.append(
+                    f"pytorch_layout={pytorch_output.layout}, pytorch_shape={tuple(pytorch_output.shape)}"
+                )
+                parts.append(_np_summary(values, "pytorch_values"))
+            else:
+                pytorch_np = pytorch_output.detach().cpu().numpy()
+                parts.append(_np_summary(pytorch_np, "pytorch"))
+        elif isinstance(pytorch_output, np.ndarray):
+            parts.append(_np_summary(pytorch_output, "pytorch"))
+        else:
+            parts.append(f"pytorch_type={type(pytorch_output).__name__}")
+
+        if isinstance(spardial_output, tuple):
+            values = spardial_output[-1]
+            parts.append(f"spardial_sparse_parts={len(spardial_output)}")
+            if isinstance(values, np.ndarray):
+                parts.append(_np_summary(values, "spardial_values"))
+            else:
+                parts.append(f"spardial_values_type={type(values).__name__}")
+        elif isinstance(spardial_output, np.ndarray):
+            parts.append(_np_summary(spardial_output, "spardial"))
+        else:
+            parts.append(f"spardial_type={type(spardial_output).__name__}")
+
+        return "; ".join(parts)
 
     def run(
         self,
@@ -486,9 +541,15 @@ class BenchmarkBase(ABC):
         # Check correctness
         if verbose:
             print("  Checking correctness...", file=sys.stderr)
-        result.correctness_passed, result.max_error = self.check_results(
+        result.correctness_passed, result.max_error, result.correctness_reason = self.check_results(
             pytorch_output, spardial_output
         )
+        if not result.correctness_passed:
+            summary = self._summarize_output(pytorch_output, spardial_output)
+            print(
+                f"  Correctness FAIL details: max_error={result.max_error:.2e}; {summary}",
+                file=sys.stderr,
+            )
 
         # Compute statistics
         result.compute_statistics()

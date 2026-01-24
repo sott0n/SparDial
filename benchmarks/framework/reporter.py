@@ -2,7 +2,7 @@
 
 import json
 import numpy as np
-from typing import List
+from typing import Dict, List
 from benchmarks.framework.benchmark_base import BenchmarkResult
 
 
@@ -41,52 +41,12 @@ def format_human_readable(results: List[BenchmarkResult]) -> str:
         lines.append("(no results)")
         return "\n".join(lines)
 
-    headers = [
-        "benchmark",
-        "size",
-        "sparsity",
-        "format",
-        "pytorch_mean_ms",
-        "pytorch_std_ms",
-        "spardial_compile_ms",
-        "spardial_mean_ms",
-        "spardial_std_ms",
-        "speedup",
-        "correct",
-        "max_error",
-    ]
-
-    rows = []
-    for r in results:
-        rows.append([
-            r.name,
-            "x".join(map(str, r.size)),
-            f"{r.sparsity:.1%}",
-            r.format,
-            f"{r.pytorch_mean:.3f}",
-            f"{r.pytorch_std:.3f}",
-            f"{r.spardial_compile_time:.3f}",
-            f"{r.spardial_mean:.3f}",
-            f"{r.spardial_std:.3f}",
-            f"{r.speedup:.2f}x",
-            "yes" if r.correctness_passed else "no",
-            f"{r.max_error:.2e}",
-        ])
-
-    widths = [
-        max(len(headers[i]), max(len(row[i]) for row in rows))
-        for i in range(len(headers))
-    ]
-
-    def _format_row(values):
-        return " | ".join(
-            value.ljust(widths[i]) for i, value in enumerate(values)
-        )
-
-    lines.append(_format_row(headers))
-    lines.append("-+-".join("-" * w for w in widths))
-    for row in rows:
-        lines.append(_format_row(row))
+    sections = format_markdown_sections(results)
+    for name, table_lines in sections.items():
+        lines.append(f"### {benchmark_title(name)}")
+        lines.append("")
+        lines.extend(table_lines)
+        lines.append("")
 
     return "\n".join(lines)
 
@@ -160,3 +120,65 @@ def format_csv(results: List[BenchmarkResult]) -> str:
         )
 
     return "\n".join(lines)
+BENCHMARK_TITLES = {
+    "spmv": "SpMV (Sparse Matrix-Vector Multiplication)",
+    "spmm": "SpMM (Sparse Matrix-Matrix Multiplication)",
+    "add": "Add (Sparse Addition)",
+}
+
+
+def benchmark_title(name: str) -> str:
+    return BENCHMARK_TITLES.get(name, name.upper())
+
+
+def _format_markdown_table(results: List[BenchmarkResult]) -> List[str]:
+    if not results:
+        return [
+            "| Size | Sparsity | PyTorch (ms) | SparDial (ms) | Speedup | Correctness |",
+            "|------|----------|--------------|---------------|---------|-------------|",
+        ]
+
+    formats = {r.format for r in results}
+    include_format = len(formats) > 1
+
+    lines = [
+        "| Size | Sparsity | PyTorch (ms) | SparDial (ms) | Speedup | Correctness |",
+        "|------|----------|--------------|---------------|---------|-------------|",
+    ]
+
+    def _row_key(r: BenchmarkResult):
+        return (r.format, r.size, r.sparsity) if include_format else (r.size, r.sparsity)
+
+    for r in sorted(results, key=_row_key):
+        size_str = "x".join(map(str, r.size))
+        if include_format:
+            size_str = f"{size_str} ({r.format})"
+        lines.append(
+            f"| {size_str} | {r.sparsity:.0%} | {r.pytorch_mean:.3f} | "
+            f"{r.spardial_mean:.3f} | {r.speedup:.2f}x | "
+            f"{_correctness_cell(r)} |"
+        )
+    return lines
+
+
+def _correctness_cell(result: BenchmarkResult) -> str:
+    if result.correctness_passed:
+        return "OK"
+    if result.correctness_reason:
+        return f"NG ({result.correctness_reason})"
+    return f"NG (max_error {result.max_error:.1e})"
+
+
+def format_markdown_sections(results: List[BenchmarkResult]) -> Dict[str, List[str]]:
+    sections: Dict[str, List[str]] = {}
+    order: List[str] = []
+    for r in results:
+        if r.name not in sections:
+            sections[r.name] = []
+            order.append(r.name)
+        sections[r.name].append(r)
+
+    ordered_sections: Dict[str, List[str]] = {}
+    for name in order:
+        ordered_sections[name] = _format_markdown_table(sections[name])
+    return ordered_sections
