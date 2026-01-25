@@ -21,7 +21,7 @@ The SparDial compilation pipeline transforms PyTorch models and NumPy/SciPy kern
 PyTorch Model / NumPy-SciPy Kernel (CSR)
     ↓ 1A: torch.export.export() + FxImporter
     ↓ 1B: @spardial_jit tracing
-Torch Dialect IR*
+Torch Dialect IR (NOTE: Torch only)
     ↓ 2A: torch-backend-to-linalg-on-tensors-backend-pipeline*
 Linalg-on-Tensors IR
     ↓ 3: sparsification-and-bufferization
@@ -34,9 +34,7 @@ Execution-ready IR
 Executable Code
 ```
 
-* PyTorch frontend only.
-
-Key features:
+### Key features:
 - **Sparse tensor optimization at IR level**: Uses MLIR Sparse Tensor Dialect for compile-time optimization
 - **Automatic sparsification**: Detects sparse patterns and applies optimizations during compilation
 - **ExecutionEngine-based JIT**: Compiles and executes MLIR IR directly
