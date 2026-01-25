@@ -30,6 +30,7 @@ declare_mlir_python_sources(SparDialPythonSources.Core
         numpy_backend/kernel_builder.py
         numpy_backend/sparse_adapter.py
         numpy_backend/sparse_encoding.py
+        numpy_backend/tracer.py
 )
 
 # Declare parent for SparDial extensions

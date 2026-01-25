@@ -15,29 +15,33 @@ Sparse Dialect Compiler based on MLIR
 
 ## Pipeline
 
-The SparDial compilation pipeline transforms PyTorch models into optimized executable code through multiple MLIR dialect lowering stages:
+The SparDial compilation pipeline transforms PyTorch models and NumPy/SciPy kernels into optimized executable code through MLIR dialect lowering stages. Both frontends converge on the same sparsification + LLVM lowering path:
 
 ```
-PyTorch Model
-    ↓ 1: torch.export.export() + FxImporter
-Torch Dialect IR
-    ↓ 2: torch-backend-to-linalg-on-tensors-backend-pipeline
+PyTorch Model / NumPy-SciPy Kernel (CSR)
+    ↓ 1A: torch.export.export() + FxImporter
+    ↓ 1B: @spardial_jit tracing
+Torch Dialect IR*
+    ↓ 2A: torch-backend-to-linalg-on-tensors-backend-pipeline*
 Linalg-on-Tensors IR
     ↓ 3: sparsification-and-bufferization
 Sparse Linalg IR (with bufferization)
     ↓ 4: convert-linalg-to-loops + lower to LLVM
 LLVM Dialect IR
-    ↓ 5: refback-munge-calling-conventions
+    ↓ 5: refback-munge-calling-conventions*
 Execution-ready IR
     ↓ 6: MLIR ExecutionEngine (JIT)
 Executable Code
 ```
+
+* PyTorch frontend only.
 
 Key features:
 - **Sparse tensor optimization at IR level**: Uses MLIR Sparse Tensor Dialect for compile-time optimization
 - **Automatic sparsification**: Detects sparse patterns and applies optimizations during compilation
 - **ExecutionEngine-based JIT**: Compiles and executes MLIR IR directly
 - **CSR format support**: Handles Compressed Sparse Row tensors from PyTorch
+- **NumPy/SciPy CSR support**: Direct CSR SpMV path via `@spardial_jit` tracing
 - **End-to-end compilation**: PyTorch → MLIR → Optimized machine code
 
 Note: The pipeline performs sparse optimizations at the IR level using Sparse Tensor Dialect. Currently, the execution interface uses dense array representation for input/output, while the internal computation benefits from sparse optimizations.
