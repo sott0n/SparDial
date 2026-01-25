@@ -15,12 +15,24 @@ from benchmarks.kernels.bench_spmv import SpMVBenchmark
 from benchmarks.kernels.bench_spmm import SpMMBenchmark
 from benchmarks.kernels.bench_add import AddBenchmark
 
+# NumPy SpMV benchmark requires SciPy - make it optional
+try:
+    from benchmarks.kernels.bench_numpy_spmv import NumpySpMVBenchmark
+    HAS_NUMPY_SPMV = True
+except ImportError:
+    HAS_NUMPY_SPMV = False
+    NumpySpMVBenchmark = None  # type: ignore
+
 
 BENCHMARKS = {
     "spmv": SpMVBenchmark,
     "spmm": SpMMBenchmark,
     "add": AddBenchmark,
 }
+
+# Only add numpy_spmv if SciPy is available
+if HAS_NUMPY_SPMV:
+    BENCHMARKS["numpy_spmv"] = NumpySpMVBenchmark
 
 FORMATS = ["csr", "csc", "coo", "dense"]
 
@@ -129,7 +141,6 @@ def main() -> None:
     Main entry point for the benchmark CLI.
 
     Parses command-line arguments and runs the specified benchmarks.
-    Exits with code 1 if any correctness check fails.
     """
     parser = argparse.ArgumentParser(
         description="SparDial Benchmark Runner",

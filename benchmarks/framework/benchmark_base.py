@@ -24,7 +24,7 @@ from spardial.pipeline import (
     sparsify_and_bufferize,
     prepare_for_execution,
 )
-from spardial.backend import SparDialInvoker, CONSUME_RETURN_FUNC_PREFIX
+from spardial.jit_runtime import SparDialInvoker, CONSUME_RETURN_FUNC_PREFIX
 
 
 @dataclass

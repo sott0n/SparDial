@@ -124,6 +124,8 @@ BENCHMARK_TITLES = {
     "spmv": "SpMV (Sparse Matrix-Vector Multiplication)",
     "spmm": "SpMM (Sparse Matrix-Matrix Multiplication)",
     "add": "Add (Sparse Addition)",
+    # Note: For numpy_spmv, "PyTorch" column shows SciPy baseline times
+    "numpy_spmv": "NumPy SpMV (SciPy baseline vs SparDial NumPy Backend)",
 }
 
 
