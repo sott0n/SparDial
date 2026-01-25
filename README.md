@@ -128,6 +128,33 @@ print(result)
 crow_indices, col_indices, values = spardial_jit(net, sparse_csr, sparse_csr)
 ```
 
+### NumPy/SciPy CSR SpMV
+
+SparDial provides a direct MLIR path for SciPy CSR matrices without PyTorch:
+
+```python
+from scipy.sparse import csr_matrix
+import numpy as np
+from spardial import spmv
+
+A_dense = np.array([
+    [0, 0, 1, 0],
+    [2, 0, 0, 0],
+    [0, 3, 0, 4],
+    [0, 0, 0, 0],
+], dtype=np.float32)
+
+A = csr_matrix(A_dense)
+x = np.array([1, 2, 3, 4], dtype=np.float32)
+y = spmv(A, x)
+print(y)  # [ 3.  2. 22.  0.]
+```
+
+Notes:
+- CSR format only (other sparse formats should be converted to CSR).
+- Supported dtypes: float32, float64.
+- Supported index dtypes: int32, int64.
+
 ## How to test
 
 SparDial uses LLVM's [LIT](https://llvm.org/docs/CommandGuide/lit.html) (LLVM Integrated Tester) framework for all tests.
@@ -165,6 +192,9 @@ Tests are located in `tests/` directory:
   - `sparse_encoding_pass.py`: Sparse encoding propagation pass
   - `sparsification.py`: Sparsification and bufferization
   - `sparse_csr_import.py`: CSR tensor automatic encoding
+
+- **tests/numpy/**: NumPy/SciPy CSR backend tests
+  - `test_spmv.py`: CSR SpMV correctness (float32/float64, empty, identity)
 
 Each test uses FileCheck directives (`# CHECK:`) to verify expected output patterns.
 
