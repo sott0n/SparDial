@@ -54,6 +54,31 @@ def test_spmv_identity():
     print("PASSED")
 
 
+def test_spmv_float64():
+    """Float64 SpMV test"""
+    # CHECK-LABEL: === Float64 SpMV ===
+    print("=== Float64 SpMV ===")
+
+    A_dense = np.array([
+        [1.5, 0.0],
+        [0.0, 2.0],
+    ], dtype=np.float64)
+
+    A = csr_matrix(A_dense)
+    x = np.array([2.0, 3.0], dtype=np.float64)
+
+    y_scipy = (A @ x).astype(np.float64)
+    y_spardial = spmv(A, x)
+
+    print(f"scipy: {y_scipy}")
+    print(f"spardial: {y_spardial}")
+    # CHECK: scipy: [3. 6.]
+    # CHECK: spardial: [3. 6.]
+
+    assert np.allclose(y_scipy, y_spardial), "Float64 results do not match!"
+    print("PASSED")
+
+
 def test_spmv_empty():
     """Empty matrix (nnz=0) test"""
     # CHECK-LABEL: === Empty SpMV ===
@@ -89,5 +114,6 @@ def test_spmv_column_vector():
 if __name__ == "__main__":
     test_spmv_basic()
     test_spmv_identity()
+    test_spmv_float64()
     test_spmv_empty()
     test_spmv_column_vector()
