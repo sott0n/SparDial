@@ -1,9 +1,8 @@
 # SparDial Python Package
 
-# Avoid eager imports to prevent circular import with spardial.ir.
-def spmv(*args, **kwargs):
-    """Lazy wrapper for NumPy/SciPy SpMV API."""
-    from spardial.numpy_backend import spmv as _spmv
-    return _spmv(*args, **kwargs)
+def spardial_jit(*args, **kwargs):
+    """Lazy wrapper for spardial_jit (NumPy or PyTorch)."""
+    from spardial.backend import spardial_jit as _spardial_jit
+    return _spardial_jit(*args, **kwargs)
 
-__all__ = ["spmv"]
+__all__ = ["spardial_jit"]

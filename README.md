@@ -128,14 +128,19 @@ print(result)
 crow_indices, col_indices, values = spardial_jit(net, sparse_csr, sparse_csr)
 ```
 
-### NumPy/SciPy CSR SpMV
+### NumPy/SciPy CSR SpMV (Decorator)
 
-SparDial provides a direct MLIR path for SciPy CSR matrices without PyTorch:
+SparDial provides a direct MLIR path for SciPy CSR matrices without PyTorch,
+via a `@spardial_jit`-decorated function:
 
 ```python
 from scipy.sparse import csr_matrix
 import numpy as np
-from spardial import spmv
+from spardial import spardial_jit
+
+@spardial_jit
+def spmv(A, x):
+    return A @ x
 
 A_dense = np.array([
     [0, 0, 1, 0],
