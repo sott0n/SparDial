@@ -12,17 +12,29 @@ from spardial.pipeline import (
 from spardial.jit_runtime import SparDialInvoker, find_executable_function
 
 
-def spardial_jit(model, *args):
+def spardial_jit(model, *args, **kwargs):
     """
     JIT compile and execute a PyTorch model using SparDial MLIR pipeline.
 
     Args:
-        model: torch.nn.Module instance
+        model: torch.nn.Module instance or a NumPy/SciPy function (decorator form)
         *args: input tensors for the model
 
     Returns:
         Result tensor(s) from model execution
     """
+    # NumPy/SciPy decorator path: @spardial_jit
+    if callable(model) and not args and not kwargs and not isinstance(model, torch.nn.Module):
+        def _wrapped(*fn_args, **fn_kwargs):
+            from spardial.numpy_backend.tracer import trace_spmv
+            op = trace_spmv(model, *fn_args, **fn_kwargs)
+            return op.execute()
+
+        return _wrapped
+
+    if kwargs:
+        raise TypeError("spardial_jit does not accept keyword arguments for PyTorch models.")
+
     # Import PyTorch model to MLIR
     mlir_module = import_pytorch_model(model, *args)
 

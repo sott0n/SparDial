@@ -7,7 +7,12 @@ Tests basic SpMV, identity matrix, empty matrix, and column vector input.
 
 from scipy.sparse import csr_matrix
 import numpy as np
-from spardial import spmv
+from spardial import spardial_jit
+
+
+@spardial_jit
+def spmv(A, x):
+    return A @ x
 
 
 def test_spmv_basic():
