@@ -15,13 +15,15 @@ from benchmarks.kernels.bench_spmv import SpMVBenchmark
 from benchmarks.kernels.bench_spmm import SpMMBenchmark
 from benchmarks.kernels.bench_add import AddBenchmark
 
-# NumPy SpMV benchmark requires SciPy - make it optional
+# NumPy benchmarks require SciPy - make them optional
 try:
     from benchmarks.kernels.bench_numpy_spmv import NumpySpMVBenchmark
-    HAS_NUMPY_SPMV = True
+    from benchmarks.kernels.bench_numpy_spmm import NumpySpMMBenchmark
+    HAS_NUMPY_BENCH = True
 except ImportError:
-    HAS_NUMPY_SPMV = False
+    HAS_NUMPY_BENCH = False
     NumpySpMVBenchmark = None  # type: ignore
+    NumpySpMMBenchmark = None  # type: ignore
 
 
 BENCHMARKS = {
@@ -30,9 +32,10 @@ BENCHMARKS = {
     "add": AddBenchmark,
 }
 
-# Only add numpy_spmv if SciPy is available
-if HAS_NUMPY_SPMV:
+# Only add NumPy benchmarks if SciPy is available
+if HAS_NUMPY_BENCH:
     BENCHMARKS["numpy_spmv"] = NumpySpMVBenchmark
+    BENCHMARKS["numpy_spmm"] = NumpySpMMBenchmark
 
 FORMATS = ["csr", "csc", "coo", "dense"]
 

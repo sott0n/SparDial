@@ -126,6 +126,7 @@ BENCHMARK_TITLES = {
     "add": "Add (Sparse Addition)",
     # Note: For numpy_spmv, "PyTorch" column shows SciPy baseline times
     "numpy_spmv": "NumPy SpMV (SciPy baseline vs SparDial NumPy Backend)",
+    "numpy_spmm": "NumPy SpMM (SciPy baseline vs SparDial NumPy Backend)",
 }
 
 

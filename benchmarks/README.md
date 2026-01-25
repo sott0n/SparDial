@@ -51,7 +51,7 @@ python -m benchmarks --output csv > results.csv
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--benchmarks` | Comma-separated list (spmv,spmm,add) | all |
+| `--benchmarks` | Comma-separated list (spmv,spmm,add,numpy_spmv,numpy_spmm) | all |
 | `--sizes` | Matrix sizes (e.g., 100x100,500x500) | 100x100 |
 | `--sparsities` | Sparsity levels (e.g., 0.9,0.95,0.99) | 0.9 |
 | `--formats` | Sparse formats (csr,csc,coo,dense) | csr |

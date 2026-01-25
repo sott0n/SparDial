@@ -12,7 +12,7 @@ add_custom_target(spardial-benchmark
     COMMAND ${CMAKE_COMMAND} -E env
         PYTHONPATH=${SPARDIAL_PYTHON_PKG_DIR}:${SPARDIAL_SOURCE_DIR}:$ENV{PYTHONPATH}
         ${Python3_EXECUTABLE} -m benchmarks
-            --benchmarks spmv,spmm,add,numpy_spmv
+            --benchmarks spmv,spmm,add,numpy_spmv,numpy_spmm
             --sizes 100x100,500x500,1000x1000,2000x2000,5000x5000
             --sparsities 0.9,0.95,0.99
             --formats csr
@@ -37,7 +37,7 @@ add_custom_target(spardial-benchmark-medium
     COMMAND ${CMAKE_COMMAND} -E env
         PYTHONPATH=${SPARDIAL_PYTHON_PKG_DIR}:${SPARDIAL_SOURCE_DIR}:$ENV{PYTHONPATH}
         ${Python3_EXECUTABLE} -m benchmarks
-            --benchmarks spmv,spmm,add,numpy_spmv
+            --benchmarks spmv,spmm,add,numpy_spmv,numpy_spmm
             --sizes 500x500,1000x1000,2000x2000
             --sparsities 0.9,0.95,0.99
             --formats csr
@@ -52,7 +52,7 @@ add_custom_target(spardial-benchmark-json
     COMMAND ${CMAKE_COMMAND} -E env
         PYTHONPATH=${SPARDIAL_PYTHON_PKG_DIR}:${SPARDIAL_SOURCE_DIR}:$ENV{PYTHONPATH}
         ${Python3_EXECUTABLE} -m benchmarks
-            --benchmarks spmv,spmm,add,numpy_spmv
+            --benchmarks spmv,spmm,add,numpy_spmv,numpy_spmm
             --sizes 100x100,500x500,1000x1000,2000x2000,5000x5000
             --sparsities 0.9,0.95,0.99
             --formats csr
@@ -67,7 +67,7 @@ add_custom_target(spardial-benchmark-csv
     COMMAND ${CMAKE_COMMAND} -E env
         PYTHONPATH=${SPARDIAL_PYTHON_PKG_DIR}:${SPARDIAL_SOURCE_DIR}:$ENV{PYTHONPATH}
         ${Python3_EXECUTABLE} -m benchmarks
-            --benchmarks spmv,spmm,add,numpy_spmv
+            --benchmarks spmv,spmm,add,numpy_spmv,numpy_spmm
             --sizes 100x100,500x500,1000x1000,2000x2000,5000x5000
             --sparsities 0.9,0.95,0.99
             --formats csr
@@ -77,12 +77,12 @@ add_custom_target(spardial-benchmark-csv
     COMMENT "Running SparDial benchmarks (CSV output)"
 )
 
-# NumPy backend SpMV benchmark only
+# NumPy backend benchmarks only
 add_custom_target(spardial-benchmark-numpy
     COMMAND ${CMAKE_COMMAND} -E env
         PYTHONPATH=${SPARDIAL_PYTHON_PKG_DIR}:${SPARDIAL_SOURCE_DIR}:$ENV{PYTHONPATH}
         ${Python3_EXECUTABLE} -m benchmarks
-            --benchmarks numpy_spmv
+            --benchmarks numpy_spmv,numpy_spmm
             --sizes 100x100,500x500,1000x1000
             --sparsities 0.9,0.95,0.99
             --formats csr

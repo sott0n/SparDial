@@ -81,3 +81,31 @@ def create_numpy_vector(
     # Use isolated random generator
     rng = np.random.default_rng(seed)
     return rng.standard_normal(size).astype(dtype)
+
+
+def create_numpy_matrix(
+    rows: int,
+    cols: int,
+    dtype: np.dtype = np.float32,
+    seed: int = 42,
+) -> np.ndarray:
+    """
+    Create a NumPy dense matrix with random values.
+
+    Args:
+        rows: Number of rows
+        cols: Number of columns
+        dtype: Data type (np.float32 or np.float64)
+        seed: Random seed for reproducibility
+
+    Returns:
+        NumPy dense array (2D)
+
+    Raises:
+        ValueError: If rows or cols are not positive
+    """
+    if rows <= 0 or cols <= 0:
+        raise ValueError(f"Dimensions must be positive, got ({rows}, {cols})")
+
+    rng = np.random.default_rng(seed)
+    return rng.standard_normal((rows, cols)).astype(dtype)

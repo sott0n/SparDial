@@ -46,3 +46,29 @@ def spmv(A, x) -> np.ndarray:
 
     compiler = get_compiler()
     return compiler.execute_spmv(A, x)
+
+
+def spmm(A, B) -> np.ndarray:
+    """Sparse Matrix-Matrix Multiplication: C = A @ B
+
+    Compiles the SpMM operation to optimized LLVM code via MLIR
+    sparse tensor infrastructure and executes it.
+
+    Args:
+        A: scipy.sparse.csr_matrix (or other format that can be converted)
+        B: NumPy dense matrix (shape (n, k))
+
+    Returns:
+        np.ndarray: Result matrix (shape (m, k))
+
+    Notes:
+        - MVP supports CSR format only. Other formats will be converted.
+        - Supported dtypes: float32, float64
+        - Supported index dtypes: int32, int64
+    """
+    # Convert other sparse formats to CSR
+    if hasattr(A, 'tocsr') and not isinstance(A, csr_matrix):
+        A = A.tocsr()
+
+    compiler = get_compiler()
+    return compiler.execute_spmm(A, B)

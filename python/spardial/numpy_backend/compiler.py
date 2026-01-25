@@ -127,6 +127,56 @@ class SparseCompiler:
 
         return result
 
+    def execute_spmm(
+        self,
+        A: csr_matrix,
+        B: np.ndarray,
+    ) -> np.ndarray:
+        """Execute SpMM: C = A @ B
+
+        Args:
+            A: SciPy CSR matrix
+            B: NumPy dense matrix (2D)
+
+        Returns:
+            np.ndarray: Result matrix
+        """
+        # Validate inputs
+        SparseTensorAdapter.validate_csr(A)
+
+        if B.ndim != 2:
+            raise ValueError(f"B must be 2D matrix, got shape {B.shape}")
+
+        if A.shape[1] != B.shape[0]:
+            raise ValueError(
+                f"Shape mismatch: A is {A.shape}, B is {B.shape}"
+            )
+
+        # Ensure contiguous arrays with matching dtype
+        if B.dtype != A.dtype:
+            B = B.astype(A.dtype)
+        B = np.ascontiguousarray(B)
+
+        # Create input specs
+        A_spec = InputSpec.from_csr(A)
+        B_spec = InputSpec.from_numpy(B)
+        C_spec = InputSpec(
+            shape=(A.shape[0], B.shape[1]),
+            dtype=A.dtype,
+            format="dense"
+        )
+
+        # Compile (or get from cache)
+        module = self.compile(KernelType.SPMM, [A_spec, B_spec], C_spec)
+
+        # Prepare output buffer (initialized to zero for accumulation)
+        C = np.zeros((A.shape[0], B.shape[1]), dtype=A.dtype)
+
+        # Invoke with sparse tensor components
+        result = self._invoke_spmm(module, A, B, C)
+
+        return result
+
     def _invoke_spmv(
         self,
         module: ir.Module,
@@ -152,6 +202,32 @@ class SparseCompiler:
         function_name = find_executable_function(module)
 
         return invoker.invoke(function_name, positions, indices, values, x, y)
+
+    def _invoke_spmm(
+        self,
+        module: ir.Module,
+        A: csr_matrix,
+        B: np.ndarray,
+        C: np.ndarray,
+    ) -> np.ndarray:
+        """Invoke SpMM kernel using the shared ExecutionEngine path."""
+        positions, indices, values = SparseTensorAdapter.from_csr(A)
+
+        positions = np.ascontiguousarray(positions.astype(A.indices.dtype))
+        indices = np.ascontiguousarray(indices.astype(A.indices.dtype))
+        values = np.ascontiguousarray(values.astype(A.dtype))
+
+        print(f"Executing function: spmm", file=sys.stderr)
+        print(f"Positions: {positions} shape={positions.shape} dtype={positions.dtype}", file=sys.stderr)
+        print(f"Indices: {indices} shape={indices.shape} dtype={indices.dtype}", file=sys.stderr)
+        print(f"Values: {values} shape={values.shape} dtype={values.dtype}", file=sys.stderr)
+        print(f"B: {B} shape={B.shape} dtype={B.dtype}", file=sys.stderr)
+        print(f"C: {C} shape={C.shape} dtype={C.dtype}", file=sys.stderr)
+
+        invoker = SparDialInvoker(module, opt_level=0)
+        function_name = find_executable_function(module)
+
+        return invoker.invoke(function_name, positions, indices, values, B, C)
 
 
 # Global compiler instance
