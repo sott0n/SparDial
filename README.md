@@ -168,11 +168,11 @@ SparDial uses LLVM's [LIT](https://llvm.org/docs/CommandGuide/lit.html) (LLVM In
 
 ### Running tests
 
-Using CMake:
+Using Ninja:
 
 ```shell
 # From the repository root
-cmake --build build --target check-spardial
+ninja -C build check-spardial
 ```
 
 Or run LIT directly:
