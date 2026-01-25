@@ -65,12 +65,15 @@ def test_csr():
     print("=== CSR MM ===")
     net = MMNet()
 
-    A = torch.tensor([
-        [0.0, 1.0, 0.0, 0.0],
-        [0.0, 0.0, 0.0, 2.0],
-        [0.0, 0.0, 0.0, 0.0],
-        [3.0, 0.0, 0.0, 0.0],
-    ], dtype=torch.float32)
+    A = torch.tensor(
+        [
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 2.0],
+            [0.0, 0.0, 0.0, 0.0],
+            [3.0, 0.0, 0.0, 0.0],
+        ],
+        dtype=torch.float32,
+    )
     S = A.to_sparse_csr()
 
     print("pytorch csr")
@@ -99,12 +102,15 @@ def test_csc():
     print("=== CSC MM ===")
     net = MMNet()
 
-    A = torch.tensor([
-        [0.0, 1.0, 0.0, 0.0],
-        [0.0, 0.0, 0.0, 2.0],
-        [0.0, 0.0, 0.0, 0.0],
-        [3.0, 0.0, 0.0, 0.0],
-    ], dtype=torch.float32)
+    A = torch.tensor(
+        [
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 2.0],
+            [0.0, 0.0, 0.0, 0.0],
+            [3.0, 0.0, 0.0, 0.0],
+        ],
+        dtype=torch.float32,
+    )
     S = A.to_sparse_csc()
 
     print("pytorch csc")

@@ -98,9 +98,7 @@ class SparseCompiler:
             raise ValueError(f"x must be 1D vector, got shape {x.shape}")
 
         if A.shape[1] != x.shape[0]:
-            raise ValueError(
-                f"Shape mismatch: A is {A.shape}, x is {x.shape}"
-            )
+            raise ValueError(f"Shape mismatch: A is {A.shape}, x is {x.shape}")
 
         # Ensure contiguous arrays with matching dtype
         if x.dtype != A.dtype:
@@ -110,11 +108,7 @@ class SparseCompiler:
         # Create input specs
         A_spec = InputSpec.from_csr(A)
         x_spec = InputSpec.from_numpy(x)
-        y_spec = InputSpec(
-            shape=(A.shape[0],),
-            dtype=A.dtype,
-            format="dense"
-        )
+        y_spec = InputSpec(shape=(A.shape[0],), dtype=A.dtype, format="dense")
 
         # Compile (or get from cache)
         module = self.compile(KernelType.SPMV, [A_spec, x_spec], y_spec)
@@ -148,9 +142,7 @@ class SparseCompiler:
             raise ValueError(f"B must be 2D matrix, got shape {B.shape}")
 
         if A.shape[1] != B.shape[0]:
-            raise ValueError(
-                f"Shape mismatch: A is {A.shape}, B is {B.shape}"
-            )
+            raise ValueError(f"Shape mismatch: A is {A.shape}, B is {B.shape}")
 
         # Ensure contiguous arrays with matching dtype
         if B.dtype != A.dtype:
@@ -160,11 +152,7 @@ class SparseCompiler:
         # Create input specs
         A_spec = InputSpec.from_csr(A)
         B_spec = InputSpec.from_numpy(B)
-        C_spec = InputSpec(
-            shape=(A.shape[0], B.shape[1]),
-            dtype=A.dtype,
-            format="dense"
-        )
+        C_spec = InputSpec(shape=(A.shape[0], B.shape[1]), dtype=A.dtype, format="dense")
 
         # Compile (or get from cache)
         module = self.compile(KernelType.SPMM, [A_spec, B_spec], C_spec)
@@ -192,7 +180,10 @@ class SparseCompiler:
         values = np.ascontiguousarray(values.astype(A.dtype))
 
         print(f"Executing function: spmv", file=sys.stderr)
-        print(f"Positions: {positions} shape={positions.shape} dtype={positions.dtype}", file=sys.stderr)
+        print(
+            f"Positions: {positions} shape={positions.shape} dtype={positions.dtype}",
+            file=sys.stderr,
+        )
         print(f"Indices: {indices} shape={indices.shape} dtype={indices.dtype}", file=sys.stderr)
         print(f"Values: {values} shape={values.shape} dtype={values.dtype}", file=sys.stderr)
         print(f"x: {x} shape={x.shape} dtype={x.dtype}", file=sys.stderr)
@@ -218,7 +209,10 @@ class SparseCompiler:
         values = np.ascontiguousarray(values.astype(A.dtype))
 
         print(f"Executing function: spmm", file=sys.stderr)
-        print(f"Positions: {positions} shape={positions.shape} dtype={positions.dtype}", file=sys.stderr)
+        print(
+            f"Positions: {positions} shape={positions.shape} dtype={positions.dtype}",
+            file=sys.stderr,
+        )
         print(f"Indices: {indices} shape={indices.shape} dtype={indices.dtype}", file=sys.stderr)
         print(f"Values: {values} shape={values.shape} dtype={values.dtype}", file=sys.stderr)
         print(f"B: {B} shape={B.shape} dtype={B.dtype}", file=sys.stderr)

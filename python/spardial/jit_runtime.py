@@ -9,6 +9,7 @@ try:
 except ImportError:
     # Fallback: Import directly from MLIR if spardial doesn't re-export it
     import spardial
+
     ExecutionEngine = spardial.execution_engine.ExecutionEngine
 
 from spardial.runtime.np_to_memref import (
@@ -60,8 +61,7 @@ CONSUME_RETURN_FUNC_PREFIX = "refbackend_consume_func_return_"
 def assert_dtype_supported(dtype):
     """Assert that the numpy dtype is supported for memref conversion."""
     assert dtype in SUPPORTED_DTYPES, (
-        f"Only numpy arrays with dtypes in {SUPPORTED_DTYPES} are supported, "
-        f"but got {dtype}"
+        f"Only numpy arrays with dtypes in {SUPPORTED_DTYPES} are supported, but got {dtype}"
     )
 
 

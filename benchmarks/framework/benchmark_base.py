@@ -14,6 +14,7 @@ import torch
 
 try:
     from scipy.sparse import csr_matrix
+
     HAS_SCIPY = True
 except ImportError:
     HAS_SCIPY = False
@@ -195,8 +196,7 @@ class BenchmarkBase(ABC):
 
         if function_name is None:
             raise RuntimeError(
-                f"No executable function found in module. "
-                f"Found functions: {found_functions}"
+                f"No executable function found in module. Found functions: {found_functions}"
             )
 
         end = time.perf_counter()
@@ -293,10 +293,7 @@ class BenchmarkBase(ABC):
 
         if HAS_SCIPY:
             # Use scipy for efficient reconstruction
-            sparse_mat = csr_matrix(
-                (values, indices, indptr),
-                shape=(rows, cols)
-            )
+            sparse_mat = csr_matrix((values, indices, indptr), shape=(rows, cols))
             return sparse_mat.toarray()
         else:
             # Fallback to pure numpy (slower but no dependency)
@@ -325,6 +322,7 @@ class BenchmarkBase(ABC):
         Returns:
             Tuple of (passed, max_error, reason)
         """
+
         def _has_nan_inf(arr: np.ndarray) -> bool:
             return bool(np.isnan(arr).any() or np.isinf(arr).any())
 
@@ -346,15 +344,17 @@ class BenchmarkBase(ABC):
                         # If reconstruction fails, compare values only
                         pytorch_values = pytorch_output._values().detach().cpu().numpy()
                         spardial_values = spardial_output[-1]
-                        max_error = float(np.max(np.abs(
-                            np.sort(pytorch_values) - np.sort(spardial_values)
-                        )))
-                        passed = bool(np.allclose(
-                            np.sort(pytorch_values),
-                            np.sort(spardial_values),
-                            rtol=rtol,
-                            atol=atol
-                        ))
+                        max_error = float(
+                            np.max(np.abs(np.sort(pytorch_values) - np.sort(spardial_values)))
+                        )
+                        passed = bool(
+                            np.allclose(
+                                np.sort(pytorch_values),
+                                np.sort(spardial_values),
+                                rtol=rtol,
+                                atol=atol,
+                            )
+                        )
                         if _has_nan_inf(pytorch_values) or _has_nan_inf(spardial_values):
                             return False, max_error, "NaN/Inf"
                         if passed:
@@ -364,15 +364,14 @@ class BenchmarkBase(ABC):
                     # COO format or other - compare values only
                     pytorch_values = pytorch_output._values().detach().cpu().numpy()
                     spardial_values = spardial_output[-1]
-                    max_error = float(np.max(np.abs(
-                        np.sort(pytorch_values) - np.sort(spardial_values)
-                    )))
-                    passed = bool(np.allclose(
-                        np.sort(pytorch_values),
-                        np.sort(spardial_values),
-                        rtol=rtol,
-                        atol=atol
-                    ))
+                    max_error = float(
+                        np.max(np.abs(np.sort(pytorch_values) - np.sort(spardial_values)))
+                    )
+                    passed = bool(
+                        np.allclose(
+                            np.sort(pytorch_values), np.sort(spardial_values), rtol=rtol, atol=atol
+                        )
+                    )
                     if _has_nan_inf(pytorch_values) or _has_nan_inf(spardial_values):
                         return False, max_error, "NaN/Inf"
                     if passed:
@@ -380,7 +379,7 @@ class BenchmarkBase(ABC):
                     return False, max_error, f"max_error {max_error:.1e}"
             else:
                 # PyTorch is dense but SparDial returned sparse
-                max_error = float('inf')
+                max_error = float("inf")
                 return False, max_error, "sparse/dense mismatch"
         else:
             # Dense output - convert PyTorch output to numpy

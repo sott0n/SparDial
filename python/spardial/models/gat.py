@@ -17,9 +17,7 @@ class GraphAttentionLayer(torch.nn.Module):
         self.n_heads = n_heads
         self.dropout = dropout
         self.n_hidden = out_features
-        self.W = torch.nn.Parameter(
-            torch.empty(size=(in_features, self.n_hidden * n_heads))
-        )
+        self.W = torch.nn.Parameter(torch.empty(size=(in_features, self.n_hidden * n_heads)))
         self.a = torch.nn.Parameter(torch.empty(size=(n_heads, 2 * self.n_hidden, 1)))
         self.leakyrelu = torch.nn.LeakyReLU(leaky_relu_slope)
         self.softmax = torch.nn.Softmax(dim=-1)
@@ -30,9 +28,7 @@ class GraphAttentionLayer(torch.nn.Module):
         n_nodes = h.shape[0]
         h_transformed = torch.mm(h, self.W)
         h_transformed = F.dropout(h_transformed, self.dropout, training=self.training)
-        h_transformed = h_transformed.view(
-            n_nodes, self.n_heads, self.n_hidden
-        ).permute(1, 0, 2)
+        h_transformed = h_transformed.view(n_nodes, self.n_heads, self.n_hidden).permute(1, 0, 2)
         e = self._get_attention_scores(h_transformed)
         connectibity_mask = -9e16 * torch.ones_like(e)
         e = torch.where(adj_mat > 0, e, connectibity_mask)

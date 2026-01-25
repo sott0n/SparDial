@@ -25,8 +25,10 @@ def spardial_jit(model, *args, **kwargs):
     """
     # NumPy/SciPy decorator path: @spardial_jit
     if callable(model) and not args and not kwargs and not isinstance(model, torch.nn.Module):
+
         def _wrapped(*fn_args, **fn_kwargs):
             from spardial.numpy_backend.tracer import trace_numpy
+
             op = trace_numpy(model, *fn_args, **fn_kwargs)
             return op.execute()
 

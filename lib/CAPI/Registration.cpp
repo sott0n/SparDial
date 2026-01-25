@@ -12,6 +12,4 @@
 #include "mlir/Transforms/Passes.h"
 #include "spardial/Transforms/Passes.h"
 
-MLIR_CAPI_EXPORTED void spardialRegisterAllPasses() {
-  mlir::spardial::registerTransformPasses();
-}
+MLIR_CAPI_EXPORTED void spardialRegisterAllPasses() { mlir::spardial::registerTransformPasses(); }

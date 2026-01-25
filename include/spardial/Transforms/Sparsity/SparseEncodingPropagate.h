@@ -15,8 +15,7 @@ namespace mlir {
 namespace spardial {
 
 /// Creates a pass that propagates sparse tensor encodings through the IR.
-std::unique_ptr<OperationPass<func::FuncOp>>
-createSparseEncodingPropagationPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createSparseEncodingPropagationPass();
 
 } // namespace spardial
 } // namespace mlir

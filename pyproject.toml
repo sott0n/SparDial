@@ -1,0 +1,13 @@
+[tool.ruff]
+line-length = 100
+exclude = [
+  "build",
+  "externals",
+  ".venv",
+  ".direnv",
+  "dist",
+]
+
+[tool.ruff.format]
+indent-style = "space"
+quote-style = "double"

@@ -176,7 +176,11 @@ class NumpySpMMBenchmark:
             return False, float("inf"), "SparDial output has NaN/Inf"
 
         if scipy_output.shape != spardial_output.shape:
-            return False, float("inf"), f"shape mismatch: {scipy_output.shape} vs {spardial_output.shape}"
+            return (
+                False,
+                float("inf"),
+                f"shape mismatch: {scipy_output.shape} vs {spardial_output.shape}",
+            )
 
         max_error = float(np.max(np.abs(scipy_output - spardial_output)))
 

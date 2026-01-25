@@ -39,9 +39,14 @@ def import_pytorch_model(model, *example_args):
     # 5. Apply operator decompositions
     # Check if any arguments are sparse tensors
     has_sparse = any(
-        hasattr(arg, 'layout') and arg.layout in [
-            torch.sparse_coo, torch.sparse_csr, torch.sparse_csc,
-            torch.sparse_bsr, torch.sparse_bsc
+        hasattr(arg, "layout")
+        and arg.layout
+        in [
+            torch.sparse_coo,
+            torch.sparse_csr,
+            torch.sparse_csc,
+            torch.sparse_bsr,
+            torch.sparse_bsc,
         ]
         for arg in example_args
     )
@@ -63,15 +68,16 @@ def import_pytorch_model(model, *example_args):
 
 
 def print_mlir(module):
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("MLIR IR:")
-    print("="*80)
+    print("=" * 80)
     print(module)
-    print("="*80 + "\n")
+    print("=" * 80 + "\n")
 
 
 class SparDialCompilerError(Exception):
     """SparDial compilation error"""
+
     pass
 
 
@@ -134,11 +140,7 @@ def lower_to_linalg(torch_module):
         ")"
     )
 
-    run_pipeline_with_repro_report(
-        torch_module,
-        pipeline,
-        "Lowering Torch IR to Linalg IR"
-    )
+    run_pipeline_with_repro_report(torch_module, pipeline, "Lowering Torch IR to Linalg IR")
 
     print("Lowering successful!", file=sys.stderr)
     return torch_module
@@ -165,42 +167,33 @@ def sparsify_and_bufferize(linalg_module, sparse_options=""):
     passes = [
         # Generalize named Linalg ops to generic form for sparsification
         "func.func(linalg-generalize-named-ops)",
-
         # Run pre-sparsification pass to fuse convert/cast op into
         # producer as they might hinder kernel fusions.
         "pre-sparsification-rewrite",
-
         # Fuse elementwise operations for better performance
         "func.func(linalg-fuse-elementwise-ops)",
         "convert-shape-to-std",
-
         # Propagate sparse encodings through operations (our custom pass)
         # TODO: Enable this pass once it's properly registered
         # "func.func(sparse-encoding-propagation)",
-
         # Configure sparse assembler for direct output
         "sparse-assembler{direct-out}",
-
         # Main sparsification and bufferization pass
-        f"sparsification-and-bufferization{{{sp_opts}}}" if sp_opts
+        f"sparsification-and-bufferization{{{sp_opts}}}"
+        if sp_opts
         else "sparsification-and-bufferization",
-
         # Convert sparse storage specifiers to LLVM
         "sparse-storage-specifier-to-llvm",
-
         # Expand realloc operations before bufferization
         "func.func(expand-realloc)",
-
         # Generalize pad and concat after sparse compiler, as they are handled
         # differently when the operations involve sparse operands.
         "func.func(refback-generalize-tensor-pad)",
         "func.func(refback-generalize-tensor-concat)",
-
         # Bufferize.
         "func.func(tm-tensor-bufferize)",
         "one-shot-bufferize{copy-before-write bufferize-function-boundaries function-boundary-type-conversion=identity-layout-map}",
         "refback-mlprogram-bufferize",
-
         # Inline sparse helper methods where useful (but after dealloc).
         "inline",
         "refback-munge-calling-conventions",
@@ -219,7 +212,6 @@ def sparsify_and_bufferize(linalg_module, sparse_options=""):
         "convert-bufferization-to-memref",
         "finalize-memref-to-llvm",
         "func.func(convert-arith-to-llvm)",
-
         # Vector code (SIMD):
         #   allow fp reductions to reassociate
         #   allow 32-bit index optimizations (unsafe for very large dimensions)
@@ -233,11 +225,7 @@ def sparsify_and_bufferize(linalg_module, sparse_options=""):
 
     pipeline = "builtin.module(" + ",".join(passes) + ")"
 
-    run_pipeline_with_repro_report(
-        linalg_module,
-        pipeline,
-        "Sparsification and bufferization"
-    )
+    run_pipeline_with_repro_report(linalg_module, pipeline, "Sparsification and bufferization")
 
     return linalg_module
 
@@ -266,11 +254,7 @@ def prepare_for_execution(llvm_module):
 
     pipeline = "builtin.module(" + ",".join(passes) + ")"
 
-    run_pipeline_with_repro_report(
-        llvm_module,
-        pipeline,
-        "Preparing for execution"
-    )
+    run_pipeline_with_repro_report(llvm_module, pipeline, "Preparing for execution")
 
     print("Module ready for execution!", file=sys.stderr)
     return llvm_module

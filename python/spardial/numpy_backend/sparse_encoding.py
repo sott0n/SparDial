@@ -58,13 +58,7 @@ class SparseEncodingBuilder:
             dim_to_lvl = ir.AffineMap.get_permutation([0, 1])
             lvl_to_dim = ir.AffineMap.get_permutation([0, 1])
 
-            return st.EncodingAttr.get(
-                levels,
-                dim_to_lvl,
-                lvl_to_dim,
-                pos_width,
-                crd_width
-            )
+            return st.EncodingAttr.get(levels, dim_to_lvl, lvl_to_dim, pos_width, crd_width)
 
     def build(
         self,

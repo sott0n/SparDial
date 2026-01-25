@@ -14,8 +14,9 @@ from .sparse_encoding import SparseEncodingBuilder
 
 class KernelType(Enum):
     """Supported kernel types."""
-    SPMV = auto()      # Sparse Matrix-Vector: y = A @ x
-    SPMM = auto()      # Sparse Matrix-Matrix: C = A @ B (A sparse, B dense)
+
+    SPMV = auto()  # Sparse Matrix-Vector: y = A @ x
+    SPMM = auto()  # Sparse Matrix-Matrix: C = A @ B (A sparse, B dense)
     # Future: SDDMM, etc.
 
 
@@ -98,36 +99,28 @@ class KernelBuilder:
                 elem_type = ir.F64Type.get()
 
             # Sparse encoding for A (CSR)
-            sparse_encoding = encoding_builder.build(
-                A_spec.format,
-                A_spec.index_dtype or np.int64
-            )
+            sparse_encoding = encoding_builder.build(A_spec.format, A_spec.index_dtype or np.int64)
 
             # Types
-            A_type = ir.RankedTensorType.get(
-                list(A_spec.shape), elem_type, sparse_encoding
-            )
-            x_type = ir.RankedTensorType.get(
-                list(x_spec.shape), elem_type
-            )
-            y_type = ir.RankedTensorType.get(
-                list(output_spec.shape), elem_type
-            )
+            A_type = ir.RankedTensorType.get(list(A_spec.shape), elem_type, sparse_encoding)
+            x_type = ir.RankedTensorType.get(list(x_spec.shape), elem_type)
+            y_type = ir.RankedTensorType.get(list(output_spec.shape), elem_type)
 
             # Build module
             module = ir.Module.create()
 
             with ir.InsertionPoint(module.body):
+
                 @func.FuncOp.from_py_func(A_type, x_type, y_type)
                 def spmv(A, x, y):
                     return matvec_dsl(A, x, outs=[y])
 
             # Add llvm.emit_c_interface attribute to generate C-compatible wrapper
             for op in module.body:
-                if hasattr(op, 'attributes') and 'sym_name' in op.attributes:
-                    name = str(op.attributes['sym_name']).strip('"')
-                    if name == 'spmv':
-                        op.attributes['llvm.emit_c_interface'] = ir.UnitAttr.get()
+                if hasattr(op, "attributes") and "sym_name" in op.attributes:
+                    name = str(op.attributes["sym_name"]).strip('"')
+                    if name == "spmv":
+                        op.attributes["llvm.emit_c_interface"] = ir.UnitAttr.get()
 
             return module
 
@@ -160,35 +153,27 @@ class KernelBuilder:
                 elem_type = ir.F64Type.get()
 
             # Sparse encoding for A (CSR)
-            sparse_encoding = encoding_builder.build(
-                A_spec.format,
-                A_spec.index_dtype or np.int64
-            )
+            sparse_encoding = encoding_builder.build(A_spec.format, A_spec.index_dtype or np.int64)
 
             # Types
-            A_type = ir.RankedTensorType.get(
-                list(A_spec.shape), elem_type, sparse_encoding
-            )
-            B_type = ir.RankedTensorType.get(
-                list(B_spec.shape), elem_type
-            )
-            C_type = ir.RankedTensorType.get(
-                list(output_spec.shape), elem_type
-            )
+            A_type = ir.RankedTensorType.get(list(A_spec.shape), elem_type, sparse_encoding)
+            B_type = ir.RankedTensorType.get(list(B_spec.shape), elem_type)
+            C_type = ir.RankedTensorType.get(list(output_spec.shape), elem_type)
 
             # Build module
             module = ir.Module.create()
 
             with ir.InsertionPoint(module.body):
+
                 @func.FuncOp.from_py_func(A_type, B_type, C_type)
                 def spmm(A, B, C):
                     return matmul_dsl(A, B, outs=[C])
 
             # Add llvm.emit_c_interface attribute to generate C-compatible wrapper
             for op in module.body:
-                if hasattr(op, 'attributes') and 'sym_name' in op.attributes:
-                    name = str(op.attributes['sym_name']).strip('"')
-                    if name == 'spmm':
-                        op.attributes['llvm.emit_c_interface'] = ir.UnitAttr.get()
+                if hasattr(op, "attributes") and "sym_name" in op.attributes:
+                    name = str(op.attributes["sym_name"]).strip('"')
+                    if name == "spmm":
+                        op.attributes["llvm.emit_c_interface"] = ir.UnitAttr.get()
 
             return module

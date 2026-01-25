@@ -14,6 +14,7 @@ class InputSpec:
     Describes the shape, dtype, and sparsity format of an input tensor.
     Used to generate appropriate MLIR types and for kernel caching.
     """
+
     shape: Tuple[int, ...]
     dtype: np.dtype
     format: SparseFormat = "dense"
@@ -34,7 +35,7 @@ class InputSpec:
             shape=matrix.shape,
             dtype=np.dtype(matrix.dtype),
             format="csr",
-            index_dtype=np.dtype(matrix.indices.dtype)
+            index_dtype=np.dtype(matrix.indices.dtype),
         )
 
     @classmethod

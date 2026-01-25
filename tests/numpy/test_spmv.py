@@ -20,12 +20,15 @@ def test_spmv_basic():
     # CHECK-LABEL: === Basic SpMV ===
     print("=== Basic SpMV ===")
 
-    A_dense = np.array([
-        [0, 0, 1, 0],
-        [2, 0, 0, 0],
-        [0, 3, 0, 4],
-        [0, 0, 0, 0],
-    ], dtype=np.float32)
+    A_dense = np.array(
+        [
+            [0, 0, 1, 0],
+            [2, 0, 0, 0],
+            [0, 3, 0, 4],
+            [0, 0, 0, 0],
+        ],
+        dtype=np.float32,
+    )
 
     A = csr_matrix(A_dense)
     x = np.array([1, 2, 3, 4], dtype=np.float32)
@@ -64,10 +67,13 @@ def test_spmv_float64():
     # CHECK-LABEL: === Float64 SpMV ===
     print("=== Float64 SpMV ===")
 
-    A_dense = np.array([
-        [1.5, 0.0],
-        [0.0, 2.0],
-    ], dtype=np.float64)
+    A_dense = np.array(
+        [
+            [1.5, 0.0],
+            [0.0, 2.0],
+        ],
+        dtype=np.float64,
+    )
 
     A = csr_matrix(A_dense)
     x = np.array([2.0, 3.0], dtype=np.float64)

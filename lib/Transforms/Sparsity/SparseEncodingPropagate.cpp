@@ -37,16 +37,15 @@ struct SparseEncodingPropagation
   void runOnOperation() override {
     func::FuncOp funcOp = getOperation();
 
-    LLVM_DEBUG(llvm::dbgs() << "Running SparseEncodingPropagation on function: "
-                            << funcOp.getName() << "\n");
+    LLVM_DEBUG(llvm::dbgs() << "Running SparseEncodingPropagation on function: " << funcOp.getName()
+                            << "\n");
 
     // Collect sparse tensor encoding information from function arguments
     llvm::DenseMap<Value, sparse_tensor::SparseTensorEncodingAttr> sparseEncodings;
 
     for (auto arg : funcOp.getArguments()) {
       if (auto tensorType = dyn_cast<RankedTensorType>(arg.getType())) {
-        if (auto encoding =
-            dyn_cast_or_null<sparse_tensor::SparseTensorEncodingAttr>(
+        if (auto encoding = dyn_cast_or_null<sparse_tensor::SparseTensorEncodingAttr>(
                 tensorType.getEncoding())) {
           sparseEncodings[arg] = encoding;
           LLVM_DEBUG(llvm::dbgs() << "  Found sparse argument: " << arg << "\n");
@@ -74,8 +73,7 @@ struct SparseEncodingPropagation
           if (auto tensorType = dyn_cast<RankedTensorType>(output.getType())) {
             // Only propagate if output doesn't already have an encoding
             if (!tensorType.getEncoding()) {
-              LLVM_DEBUG(llvm::dbgs()
-                  << "    Propagating encoding to output: " << output << "\n");
+              LLVM_DEBUG(llvm::dbgs() << "    Propagating encoding to output: " << output << "\n");
 
               // Record this value's sparse encoding for further propagation
               sparseEncodings[output] = inputEncoding;
@@ -84,12 +82,9 @@ struct SparseEncodingPropagation
               // more complex rewriting logic. This pass currently only analyzes
               // and marks opportunities for sparsification.
               LLVM_DEBUG({
-                auto newType = RankedTensorType::get(
-                    tensorType.getShape(),
-                    tensorType.getElementType(),
-                    inputEncoding);
-                llvm::dbgs() << "    Marked output for sparse encoding: "
-                             << newType << "\n";
+                auto newType = RankedTensorType::get(tensorType.getShape(),
+                                                     tensorType.getElementType(), inputEncoding);
+                llvm::dbgs() << "    Marked output for sparse encoding: " << newType << "\n";
               });
             }
           }
@@ -105,8 +100,7 @@ struct SparseEncodingPropagation
           // Check if this operation has sparse inputs
           for (auto input : genericOp.getDpsInputs()) {
             if (sparseEncodings.count(input)) {
-              LLVM_DEBUG(llvm::dbgs()
-                  << "  Marking tensor.empty for sparsification\n");
+              LLVM_DEBUG(llvm::dbgs() << "  Marking tensor.empty for sparsification\n");
               sparseEncodings[emptyOp.getResult()] = sparseEncodings[input];
               break;
             }
@@ -115,15 +109,13 @@ struct SparseEncodingPropagation
       }
     });
 
-    LLVM_DEBUG(llvm::dbgs()
-        << "  Total values marked as sparse: "
-        << sparseEncodings.size() << "\n");
+    LLVM_DEBUG(llvm::dbgs() << "  Total values marked as sparse: " << sparseEncodings.size()
+                            << "\n");
   }
 };
 
 } // namespace
 
-std::unique_ptr<OperationPass<func::FuncOp>>
-mlir::spardial::createSparseEncodingPropagationPass() {
+std::unique_ptr<OperationPass<func::FuncOp>> mlir::spardial::createSparseEncodingPropagationPass() {
   return std::make_unique<SparseEncodingPropagation>();
 }

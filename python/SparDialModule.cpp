@@ -13,7 +13,6 @@ PYBIND11_MODULE(_spardial, m) {
 
   m.doc() = "SparDial main python extension";
 
-  m.def("register_passes", []() {
-    spardialRegisterAllPasses();
-  }, "Register all SparDial passes");
+  m.def(
+      "register_passes", []() { spardialRegisterAllPasses(); }, "Register all SparDial passes");
 }

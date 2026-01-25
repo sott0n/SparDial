@@ -16,7 +16,7 @@ linalg_module = lower_to_linalg(mlir_module)
 
 # Verify input is tensor-based
 ir_before = str(linalg_module)
-assert 'tensor<2x3xf32>' in ir_before
+assert "tensor<2x3xf32>" in ir_before
 
 compiled_module = sparsify_and_bufferize(linalg_module)
 print(compiled_module)
@@ -30,8 +30,7 @@ mlir_module = import_pytorch_model(model, torch.randn(3, 3), torch.randn(3, 3))
 linalg_module = lower_to_linalg(mlir_module)
 
 compiled_module = sparsify_and_bufferize(
-    linalg_module,
-    sparse_options="parallelization-strategy=none"
+    linalg_module, sparse_options="parallelization-strategy=none"
 )
 print(compiled_module)
 # CHECK: llvm.func @main

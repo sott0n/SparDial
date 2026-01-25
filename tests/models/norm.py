@@ -38,9 +38,7 @@ def main():
     edge = np.array([[0, 1], [0, 4], [1, 4], [3, 4], [4, 3]], dtype=np.int32)
     E = edge.shape[0]
     adj_mat = torch.sparse_coo_tensor(edge.T, torch.ones(E), (V, V), dtype=torch.int64)
-    adj_mat = (
-        torch.eye(V) + adj_mat
-    )  # Add self-loops to the adjacency matrix (become dense)
+    adj_mat = torch.eye(V) + adj_mat  # Add self-loops to the adjacency matrix (become dense)
 
     print("pytorch")
     print(net(adj_mat))

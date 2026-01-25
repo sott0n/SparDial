@@ -20,7 +20,7 @@ config.test_source_root = os.path.dirname(__file__)
 
 # test_exec_root: The root path where tests should be run.
 # When running through CMake, this is set by lit.site.cfg.py
-if not hasattr(config, 'test_exec_root'):
+if not hasattr(config, "test_exec_root"):
     config.test_exec_root = config.test_source_root
 
 # excludes: A list of directories to exclude from the testsuite.
@@ -36,17 +36,17 @@ config.excludes = [
 ]
 
 # Initialize environment if not already set
-if not hasattr(config, 'environment'):
+if not hasattr(config, "environment"):
     config.environment = {}
 
 # Get Python executable (from CMake if available, otherwise use current interpreter)
-if hasattr(config, 'python_executable'):
+if hasattr(config, "python_executable"):
     python_executable = config.python_executable
 else:
     python_executable = sys.executable
 
 # Setup PYTHONPATH to include the SparDial python package
-if hasattr(config, 'spardial_obj_root') and hasattr(config, 'spardial_source_root'):
+if hasattr(config, "spardial_obj_root") and hasattr(config, "spardial_source_root"):
     # Running through CMake
     # config.spardial_obj_root is CMAKE_CURRENT_BINARY_DIR which is build/tools/spardial for in-tree builds
     spardial_root = config.spardial_source_root
@@ -56,7 +56,9 @@ if hasattr(config, 'spardial_obj_root') and hasattr(config, 'spardial_source_roo
 else:
     # Running directly with lit
     spardial_root = os.path.abspath(os.path.join(config.test_source_root, ".."))
-    build_python_dir = os.path.join(spardial_root, "build", "tools", "spardial", "python_packages", "spardial")
+    build_python_dir = os.path.join(
+        spardial_root, "build", "tools", "spardial", "python_packages", "spardial"
+    )
 
 spardial_python_dir = os.path.join(spardial_root, "python")
 
@@ -84,7 +86,7 @@ if "PATH" in os.environ:
     config.environment["PATH"] = os.environ["PATH"]
 
 # Add build/bin and llvm tools to PATH
-if hasattr(config, 'llvm_tools_dir'):
+if hasattr(config, "llvm_tools_dir"):
     # Add LLVM tools directory (includes FileCheck, etc.)
     if "PATH" in config.environment:
         config.environment["PATH"] = config.llvm_tools_dir + os.pathsep + config.environment["PATH"]
@@ -93,10 +95,10 @@ if hasattr(config, 'llvm_tools_dir'):
 
 # Add SparDial build/bin to PATH if it exists
 # For in-tree builds, bin directory is in the LLVM build root, not under spardial_obj_root
-if hasattr(config, 'llvm_tools_dir'):
+if hasattr(config, "llvm_tools_dir"):
     # llvm_tools_dir already contains the bin directory with all tools, no need to add SparDial bin separately
     pass
-elif hasattr(config, 'spardial_obj_root'):
+elif hasattr(config, "spardial_obj_root"):
     # This shouldn't happen if llvm_tools_dir is set, but handle it anyway
     # Try to find bin directory relative to spardial_obj_root
     # For in-tree builds, go up to LLVM build root

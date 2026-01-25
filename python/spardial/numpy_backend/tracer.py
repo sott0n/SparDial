@@ -14,6 +14,7 @@ class TraceError(TypeError):
 @dataclass
 class SpmvOp:
     """Traced SpMV op (CSR @ 1D)."""
+
     A: csr_matrix
     x: np.ndarray
 
@@ -25,6 +26,7 @@ class SpmvOp:
 @dataclass
 class SpmmOp:
     """Traced SpMM op (CSR @ 2D)."""
+
     A: csr_matrix
     B: np.ndarray
 
@@ -99,4 +101,3 @@ def trace_numpy(fn, *args, **kwargs):
     if not isinstance(result, (SpmvOp, SpmmOp)):
         raise TraceError("Only CSR @ NumPy array is supported.")
     return result
-

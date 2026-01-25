@@ -41,7 +41,7 @@ def spmv(A, x) -> np.ndarray:
         - Supported index dtypes: int32, int64
     """
     # Convert other sparse formats to CSR
-    if hasattr(A, 'tocsr') and not isinstance(A, csr_matrix):
+    if hasattr(A, "tocsr") and not isinstance(A, csr_matrix):
         A = A.tocsr()
 
     compiler = get_compiler()
@@ -67,7 +67,7 @@ def spmm(A, B) -> np.ndarray:
         - Supported index dtypes: int32, int64
     """
     # Convert other sparse formats to CSR
-    if hasattr(A, 'tocsr') and not isinstance(A, csr_matrix):
+    if hasattr(A, "tocsr") and not isinstance(A, csr_matrix):
         A = A.tocsr()
 
     compiler = get_compiler()

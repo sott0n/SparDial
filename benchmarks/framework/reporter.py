@@ -63,28 +63,30 @@ def format_json(results: List[BenchmarkResult]) -> str:
     """
     data = {
         "benchmarks": [
-            _to_serializable({
-                "name": r.name,
-                "size": list(r.size),
-                "sparsity": r.sparsity,
-                "format": r.format,
-                "pytorch": {
-                    "mean_ms": r.pytorch_mean,
-                    "std_ms": r.pytorch_std,
-                    "times_ms": r.pytorch_times,
-                },
-                "spardial": {
-                    "compile_ms": r.spardial_compile_time,
-                    "mean_ms": r.spardial_mean,
-                    "std_ms": r.spardial_std,
-                    "times_ms": r.spardial_times,
-                },
-                "speedup": r.speedup,
-                "correctness": {
-                    "passed": r.correctness_passed,
-                    "max_error": r.max_error,
-                },
-            })
+            _to_serializable(
+                {
+                    "name": r.name,
+                    "size": list(r.size),
+                    "sparsity": r.sparsity,
+                    "format": r.format,
+                    "pytorch": {
+                        "mean_ms": r.pytorch_mean,
+                        "std_ms": r.pytorch_std,
+                        "times_ms": r.pytorch_times,
+                    },
+                    "spardial": {
+                        "compile_ms": r.spardial_compile_time,
+                        "mean_ms": r.spardial_mean,
+                        "std_ms": r.spardial_std,
+                        "times_ms": r.spardial_times,
+                    },
+                    "speedup": r.speedup,
+                    "correctness": {
+                        "passed": r.correctness_passed,
+                        "max_error": r.max_error,
+                    },
+                }
+            )
             for r in results
         ]
     }
@@ -120,6 +122,8 @@ def format_csv(results: List[BenchmarkResult]) -> str:
         )
 
     return "\n".join(lines)
+
+
 BENCHMARK_TITLES = {
     "spmv": "SpMV (Sparse Matrix-Vector Multiplication)",
     "spmm": "SpMM (Sparse Matrix-Matrix Multiplication)",

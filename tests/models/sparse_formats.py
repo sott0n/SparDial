@@ -75,12 +75,15 @@ def test_csr():
     print("=== CSR Format ===")
     net = AddNet()
 
-    A = torch.tensor([
-        [0.0, 1.0, 0.0, 0.0],
-        [0.0, 0.0, 0.0, 2.0],
-        [0.0, 0.0, 0.0, 0.0],
-        [3.0, 0.0, 0.0, 0.0],
-    ], dtype=torch.float32)
+    A = torch.tensor(
+        [
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 2.0],
+            [0.0, 0.0, 0.0, 0.0],
+            [3.0, 0.0, 0.0, 0.0],
+        ],
+        dtype=torch.float32,
+    )
     S_csr = A.to_sparse_csr()
 
     print("pytorch csr")
@@ -107,12 +110,15 @@ def test_csc():
     print("=== CSC Format ===")
     net = AddNet()
 
-    A = torch.tensor([
-        [0.0, 1.0, 0.0, 0.0],
-        [0.0, 0.0, 0.0, 2.0],
-        [0.0, 0.0, 0.0, 0.0],
-        [3.0, 0.0, 0.0, 0.0],
-    ], dtype=torch.float32)
+    A = torch.tensor(
+        [
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 2.0],
+            [0.0, 0.0, 0.0, 0.0],
+            [3.0, 0.0, 0.0, 0.0],
+        ],
+        dtype=torch.float32,
+    )
     S_csc = A.to_sparse_csc()
 
     print("pytorch csc")
@@ -139,12 +145,15 @@ def test_bsr():
     net = AddNet()
 
     # Create a 4x4 matrix that can be blocked into 2x2 blocks
-    A = torch.tensor([
-        [1.0, 2.0, 3.0, 4.0],
-        [3.0, 4.0, 5.0, 6.0],
-        [5.0, 6.0, 7.0, 8.0],
-        [7.0, 8.0, 9.0, 10.0],
-    ], dtype=torch.float32)
+    A = torch.tensor(
+        [
+            [1.0, 2.0, 3.0, 4.0],
+            [3.0, 4.0, 5.0, 6.0],
+            [5.0, 6.0, 7.0, 8.0],
+            [7.0, 8.0, 9.0, 10.0],
+        ],
+        dtype=torch.float32,
+    )
     S_bsr = A.to_sparse_bsr(blocksize=(2, 2))
 
     print("pytorch bsr")
@@ -171,12 +180,15 @@ def test_bsc():
     net = AddNet()
 
     # Create a 4x4 matrix that can be blocked into 2x2 blocks
-    A = torch.tensor([
-        [1.0, 2.0, 3.0, 4.0],
-        [3.0, 4.0, 5.0, 6.0],
-        [5.0, 6.0, 7.0, 8.0],
-        [7.0, 8.0, 9.0, 10.0],
-    ], dtype=torch.float32)
+    A = torch.tensor(
+        [
+            [1.0, 2.0, 3.0, 4.0],
+            [3.0, 4.0, 5.0, 6.0],
+            [5.0, 6.0, 7.0, 8.0],
+            [7.0, 8.0, 9.0, 10.0],
+        ],
+        dtype=torch.float32,
+    )
     S_bsc = A.to_sparse_bsc(blocksize=(2, 2))
 
     print("pytorch bsc")

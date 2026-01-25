@@ -76,10 +76,9 @@ def create_sparse_matrix(
         values = values.to(dtype)
 
     # Create COO tensor first
-    indices_tensor = torch.stack([
-        torch.tensor(row_indices, dtype=torch.long),
-        torch.tensor(col_indices, dtype=torch.long)
-    ])
+    indices_tensor = torch.stack(
+        [torch.tensor(row_indices, dtype=torch.long), torch.tensor(col_indices, dtype=torch.long)]
+    )
     coo_tensor = torch.sparse_coo_tensor(
         indices_tensor,
         values,

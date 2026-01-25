@@ -52,12 +52,10 @@ class SparseTensorAdapter:
 
         if matrix.dtype not in (np.float32, np.float64):
             raise ValueError(
-                f"Unsupported dtype {matrix.dtype}. "
-                "MVP supports float32/float64 only."
+                f"Unsupported dtype {matrix.dtype}. MVP supports float32/float64 only."
             )
 
         if matrix.indices.dtype not in (np.int32, np.int64):
             raise ValueError(
-                f"Unsupported index dtype {matrix.indices.dtype}. "
-                "Supported: int32, int64."
+                f"Unsupported index dtype {matrix.indices.dtype}. Supported: int32, int64."
             )

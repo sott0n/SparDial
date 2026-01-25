@@ -191,7 +191,11 @@ class NumpySpMVBenchmark:
 
         # Check shape
         if scipy_output.shape != spardial_output.shape:
-            return False, float("inf"), f"shape mismatch: {scipy_output.shape} vs {spardial_output.shape}"
+            return (
+                False,
+                float("inf"),
+                f"shape mismatch: {scipy_output.shape} vs {spardial_output.shape}",
+            )
 
         # Compute max absolute error
         max_error = float(np.max(np.abs(scipy_output - spardial_output)))

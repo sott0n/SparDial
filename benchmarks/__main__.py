@@ -19,6 +19,7 @@ from benchmarks.kernels.bench_add import AddBenchmark
 try:
     from benchmarks.kernels.bench_numpy_spmv import NumpySpMVBenchmark
     from benchmarks.kernels.bench_numpy_spmm import NumpySpMMBenchmark
+
     HAS_NUMPY_BENCH = True
 except ImportError:
     HAS_NUMPY_BENCH = False
@@ -42,6 +43,7 @@ FORMATS = ["csr", "csc", "coo", "dense"]
 
 class ParseError(ValueError):
     """Error raised when parsing command-line arguments fails."""
+
     pass
 
 
@@ -72,16 +74,13 @@ def parse_sizes(sizes_str: str) -> List[Tuple[int, ...]]:
         parts = size_str.split("x")
         if len(parts) < 2:
             raise ParseError(
-                f"Invalid size format '{size_str}'. "
-                f"Expected format: NxM (e.g., '100x100')"
+                f"Invalid size format '{size_str}'. Expected format: NxM (e.g., '100x100')"
             )
 
         try:
             dims = tuple(int(d.strip()) for d in parts)
         except ValueError as e:
-            raise ParseError(
-                f"Invalid size '{size_str}': dimensions must be integers. {e}"
-            )
+            raise ParseError(f"Invalid size '{size_str}': dimensions must be integers. {e}")
 
         # Validate dimensions are positive
         for i, dim in enumerate(dims):
@@ -127,9 +126,7 @@ def parse_sparsities(sparsities_str: str) -> List[float]:
             raise ParseError(f"Invalid sparsity '{s}': must be a number. {e}")
 
         if not (0.0 <= value <= 1.0):
-            raise ParseError(
-                f"Invalid sparsity {value}: must be between 0.0 and 1.0"
-            )
+            raise ParseError(f"Invalid sparsity {value}: must be between 0.0 and 1.0")
 
         sparsities.append(value)
 
@@ -239,9 +236,8 @@ Examples:
     for name in benchmark_names:
         if name not in BENCHMARKS:
             print(
-                f"Error: Unknown benchmark '{name}'. "
-                f"Available: {', '.join(BENCHMARKS.keys())}",
-                file=sys.stderr
+                f"Error: Unknown benchmark '{name}'. Available: {', '.join(BENCHMARKS.keys())}",
+                file=sys.stderr,
             )
             sys.exit(1)
 
@@ -249,9 +245,7 @@ Examples:
     for fmt in formats:
         if fmt not in FORMATS:
             print(
-                f"Error: Unknown format '{fmt}'. "
-                f"Available: {', '.join(FORMATS)}",
-                file=sys.stderr
+                f"Error: Unknown format '{fmt}'. Available: {', '.join(FORMATS)}", file=sys.stderr
             )
             sys.exit(1)
 
@@ -286,7 +280,7 @@ Examples:
                         print(
                             f"Error running {name} "
                             f"(size={size}, sparsity={sparsity}, format={fmt}): {e}",
-                            file=sys.stderr
+                            file=sys.stderr,
                         )
                         if args.progress:
                             traceback.print_exc()
